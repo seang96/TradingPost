@@ -1,0 +1,10 @@
+name: TradingPost
+main: com.spgrn.tradingpost.TradingPost
+version: 1.0.0
+
+commands:
+   shop:
+      description: Buy/Sell items to/from players.
+      usage: /shop <buy|sell|list> <item|ID|recent|expensive|common> [amount] [price|confirm]
+      permission: commandshop.use
+      permission-message: You don't have commandshop.use
