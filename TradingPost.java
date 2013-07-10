@@ -190,77 +190,75 @@ public final class TradingPost extends JavaPlugin {
  				Material mat = Material.matchMaterial(args[1]);
  				int id = mat.getId();
  				int amount = Integer.parseInt(args[2]);
+ 				String arg3 = args[3]; 
  				int totalprice = 0;
 				int currentamount = 0;
 				int totalamount = amount;
+				int itemamount = 0;
 				while(currentamount < totalamount) {
 					for(int i = 1; i <= data.getInt("Total"); i++) {
 	 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status") == "Selling")) {
 	 	 				int lowestPrice = data.getInt(i + ".Price"); 
 	 	 					for(int i1 = 1; i1 <= data.getInt("Total"); i1++) {
 	 	 						if((data.getInt(i1 + ".Item") == id) && (data.getString(i1 + ".Status") == "Selling") && (data.getInt(i1 + ".Price") <= lowestPrice)) {
- 									if(args[3].equalsIgnoreCase("confirm")) { 	
- 										if(data.getInt(i1 + ".Amount") < amount) {
- 											int price = data.getInt(i1 + ".Amount") * data.getInt(i1 + ".Price");
-	 			 							EconomyResponse r = econ.withdrawPlayer(p.getName(), price);
-	 			 							EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
-	 			 							if(r.transactionSuccess() && r1.transactionSuccess()) {
-	 			 								loadYamls();
-	 			 								totalprice = + data.getInt(i1 + ".Price");
-		 										currentamount = + data.getInt(i1 + ".Amount");
-		 										int itemamount = data.getInt(i1 + ".Amount");
-		 						 				ItemStack is = new ItemStack (mat, itemamount);
-	 			 	 							p.getInventory().addItem(is);	
-	 			 	 							if(currentamount == totalamount) {
-	 			 	 								sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
-	 			 	 							}
-	 			 	 							amount = - itemamount;
-		 										data.set(i1 + ".Status", "Sold");
-	 			 							}
- 										}
- 		 								else if(data.getInt(i1 + ".Amount") > amount){
- 		 									int price = amount * data.getInt(i1 + ".Price");
- 		 			 							EconomyResponse r = econ.withdrawPlayer(p.getName(), price);
- 		 			 							EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
- 		 			 							if(r.transactionSuccess() && r1.transactionSuccess()) {
- 		 		 									currentamount = + amount;
- 		 		 									loadYamls();
- 		 			 								totalprice = + data.getInt(i1 + ".Price");
- 			 										data.set(i1 + ".Amount", (data.getInt(i1 + ".Amount") - amount));
- 			 										saveYamls();
- 			 						 				ItemStack is = new ItemStack (mat, currentamount);
- 		 			 	 							p.getInventory().addItem(is);		
- 			 										if(currentamount == totalamount) {
- 			 										sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
- 			 										}
- 		 			 							}
- 		 									}
- 		 								else if (data.getInt(i1 + ".Amount") == amount) {
- 		 									currentamount = amount - data.getInt(i1 + ".Amount");
- 		 									int price = amount * data.getInt(i1 + ".Price");
- 		 			 						EconomyResponse r = econ.withdrawPlayer(p.getName(), price);
- 		 			 						EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
- 		 			 						if(r.transactionSuccess() && r1.transactionSuccess()) {
- 		 			 							loadYamls();
- 			 									data.set(i1 + ".Status", "Sold");
- 		 			 							totalprice = + data.getInt(i1 + ".Price");
- 			 									saveYamls();
- 		 		 								currentamount = + amount;
- 			 					 				ItemStack is = new ItemStack (mat, currentamount);
- 		 			  							p.getInventory().addItem(is);		
- 			 									if(currentamount == totalamount) {
- 			 									sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
- 												}
- 		 		 							}
- 		 								}
+ 									if(data.getInt(i1 + ".Amount") < amount) {
+ 										int amount1 = data.getInt(i1 + ".Amount");
+ 										int price1 = data.getInt(i1 + ".Price");
+ 										int price = price1 * amount1;
+ 			 							totalprice = + price;
+	 									itemamount = + amount1;
+	 									currentamount = + itemamount;
+ 			 	 						amount = - itemamount;
+										if(args[3] == arg3) {
+											EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
+											if(r1.transactionSuccess()) {
+												data.set(i1 + ".Status", "Sold");
+												saveYamls();
+											}
+										}
+
  									}
+ 		 							else if(data.getInt(i1 + ".Amount") > amount){
+ 		 								int price = amount * data.getInt(i1 + ".Price");
+	 			 						totalprice = + price;
+		 								itemamount = + (data.getInt(i1 + ".Amount") - amount);
+		 								currentamount = + itemamount;
+ 										if(args[3] == arg3) {
+ 											EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
+ 											if(r1.transactionSuccess()) {
+ 		 										data.set(i1 + ".Amount", (data.getInt(i1 + ".Amount") - amount));
+ 		 										saveYamls();	
+ 											}
+ 										}
+ 		 							}
+ 		 							else if (data.getInt(i1 + ".Amount") == amount) {
+ 		 								currentamount = amount - data.getInt(i1 + ".Amount");
+ 		 								int price = amount * data.getInt(i1 + ".Price");
+	 			 						totalprice = + price;
+		 								itemamount = + data.getInt(i1 + ".Amount");
+		 								currentamount = + itemamount;
+ 										if(args[3] == arg3) {
+ 											EconomyResponse r1 = econ.depositPlayer(data.getString(i1 + ".Player"), price);
+ 											if(r1.transactionSuccess()) {
+												data.set(i1 + ".Status", "Sold");
+												saveYamls();
+ 											}
+ 										}
+ 									}
+									if(args[3].equalsIgnoreCase("confirm")) {
+										if(currentamount == totalamount  && currentamount == itemamount) {
+											EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+											if(r.transactionSuccess()) {
+												ItemStack is = new ItemStack (mat, itemamount);
+												p.getInventory().addItem(is);	
+												sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+											}
+										}
+									}
 	 								else {
 	 									if(!(data.getString(i1 + ".Check") == "False")) {
 	 										loadYamls();
-	 										currentamount = + data.getInt(i1 + ".Amount");
-	 										amount = + data.getInt(i1 + ".Amount");
 	 										data.set(i1 + ".Check", "False");
- 			 								totalprice = + data.getInt(i1 + ".Price");
  			 								saveYamls();
  			 								if(currentamount == totalamount) {
  			 									sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
