@@ -152,6 +152,7 @@ public final class TradingPost extends JavaPlugin {
  						data.set(IDcount + ".Amount", amount);
  						data.set(IDcount + ".Price", price);
  						data.set(IDcount + ".Status", "Selling");
+ 						data.set(IDcount + ".Check", "T");
  						saveYamls();
  					} else {
  						sender.sendMessage(String.format("An error occured: %s", r.errorMessage));
@@ -196,24 +197,27 @@ public final class TradingPost extends JavaPlugin {
 				int j = 0;
 				int i = 0;
 				int k = 0;
+				int datatotalamount = 0;
 				String enough = "True";
 				while(currentamount != totalamount) {
 					log.info(String.format("New Loop"));
 					int lowestPrice = 2147483647;
 					for(i = 1; i <= data.getInt("Total"); i++) {
-						if((data.getInt(i + ".Item") == id) && (data.getInt(i + ".Amount") >= amount))
-						{
-							if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && !(data.getString(j + ".Check").equals("False")) && (data.getInt(i + ".Price") < lowestPrice)) {
-								lowestPrice = data.getInt(i + ".Price"); 
-								j= i;
+						if((data.getInt(i + ".Item") == id)) {
+							datatotalamount += data.getInt(i  + ".Amount");
+							if(datatotalamount >= amount) {
+								if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T")) && (data.getInt(i + ".Price") < lowestPrice)) {
+									lowestPrice = data.getInt(i + ".Price"); 
+									j= i;
 							}
 						}
-						else {
-							enough = "False";
+							else if(datatotalamount < amount){
+								enough = "False";
+							}
 						}
 					}
 					if(enough.equals("False")) {
-						sender.sendMessage(String.format("There is not enough" + mat + " on sale."));
+						sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 						currentamount = totalamount;
 					}
 					else {
@@ -254,29 +258,31 @@ public final class TradingPost extends JavaPlugin {
  		 				}
 					}
 				}
-				if(args.length == 4 && args[3].equalsIgnoreCase("confirm")) {
-					log.info(String.format(args[3]));
-					if(currentamount == totalamount) {
-						EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-						if(r.transactionSuccess()) {
-							ItemStack is = new ItemStack (mat, currentamount);
-							p.getInventory().addItem(is);	
-							sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+				if(enough.equals("True")) {
+					if(args.length == 4 && args[3].equalsIgnoreCase("confirm")) {
+						log.info(String.format(args[3]));
+						if(currentamount == totalamount) {
+							EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+							if(r.transactionSuccess()) {
+								ItemStack is = new ItemStack (mat, currentamount);
+								p.getInventory().addItem(is);	
+								sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+							}
+						}
+					}
+					else {
+						if(currentamount == totalamount) {
+							sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
+							for(k = 1; k <= data.getInt("Total"); k++) {
+								if((data.getString(k + ".Check").equals("F"))) {
+									loadYamls();
+									data.set(k + ".Check", "T");
+									saveYamls();
+								}
+							}
 						}
 					}
 				}
-				else {
-	 				if(currentamount == totalamount) {
-	 					sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
-		 				for(k = 1; k <= data.getInt("Total"); k++) {
-							if((data.getString(k + ".Check") == "False")) {
-								loadYamls();
-								data.set(k + ".Check", null);
-								saveYamls();
-							}
-						}
-		 			}
-	 			}
 			}
      			return true;
 		}
