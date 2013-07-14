@@ -229,8 +229,8 @@ public final class TradingPost extends JavaPlugin {
  										}
  									}
  		 						}
-	 							}
-	 	 					}
+	 						}
+	 	 				}
 						if(args[3].equalsIgnoreCase("confirm")) {
 								if(currentamount == totalamount  && currentamount == itemamount) {
 								EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
