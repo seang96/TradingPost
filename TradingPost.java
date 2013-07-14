@@ -258,9 +258,9 @@ public final class TradingPost extends JavaPlugin {
 						}
 		 			}
 	 			}
-			}
+		}
      		return true;
-     	}
+	}
         return false;
     }
 }
