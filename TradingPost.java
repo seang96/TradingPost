@@ -219,7 +219,7 @@ public final class TradingPost extends JavaPlugin {
  		 						else if(data.getInt(i + ".Amount") > amount){
  		 							int price = amount * data.getInt(i + ".Price");
 	 									totalprice = + price;
-		 								itemamount = + amount;
+		 							itemamount = + amount;
 		 							currentamount = + itemamount;
  									if(args[3].equalsIgnoreCase("confirm")) {
  										EconomyResponse r1 = econ.depositPlayer(data.getString(i + ".Player"), price);
@@ -231,35 +231,35 @@ public final class TradingPost extends JavaPlugin {
  		 						}
 	 						}
 	 	 				}
-						if(args[3].equalsIgnoreCase("confirm")) {
-								if(currentamount == totalamount  && currentamount == itemamount) {
-								EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-								if(r.transactionSuccess()) {
-									ItemStack is = new ItemStack (mat, itemamount);
-									p.getInventory().addItem(is);	
-									sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
-								}
+					if(args[3].equalsIgnoreCase("confirm")) {
+							if(currentamount == totalamount  && currentamount == itemamount) {
+							EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+							if(r.transactionSuccess()) {
+								ItemStack is = new ItemStack (mat, itemamount);
+								p.getInventory().addItem(is);	
+								sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
 							}
 						}
-						else {
-							if(!(data.getString(j + ".Check") == "False")) {
-								loadYamls();
-								data.set(j + ".Check", "False");
-		 						saveYamls();
-	 							if(currentamount == totalamount) {
-		 							sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
-		 							for(j = 1; j <= data.getInt("Total"); j++) {
-										if((data.getString(j + ".Check") == "False") && (data.getInt(j + ".Item") == id)) {
-											loadYamls();
-											data.set(j + ".Check", null);
-											saveYamls();
-										}
+					}
+					else {
+						if(!(data.getString(j + ".Check") == "False")) {
+							loadYamls();
+							data.set(j + ".Check", "False");
+		 					saveYamls();
+	 						if(currentamount == totalamount) {
+		 						sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
+		 						for(j = 1; j <= data.getInt("Total"); j++) {
+									if((data.getString(j + ".Check") == "False") && (data.getInt(j + ".Item") == id)) {
+										loadYamls();
+										data.set(j + ".Check", null);
+										saveYamls();
 									}
-								}
-							}
-	 	 				}
-	 				}
+		 						}
+	 						}
+						}
+					}
 				}
+     		}
      		return true;
          }
        return false;
