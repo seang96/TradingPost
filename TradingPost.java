@@ -241,18 +241,18 @@ public final class TradingPost extends JavaPlugin {
 								}
 							}
 						}
-							else {
-								if(!(data.getString(j + ".Check") == "False")) {
-									loadYamls();
-									data.set(j + ".Check", "False");
-		 							saveYamls();
-	 								if(currentamount == totalamount) {
-		 								sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
-		 								for(j = 1; j <= data.getInt("Total"); j++) {
-											if((data.getString(j + ".Check") == "False") && (data.getInt(j + ".Item") == id)) {
-												loadYamls();
-												data.set(j + ".Check", null);
-												saveYamls();
+						else {
+							if(!(data.getString(j + ".Check") == "False")) {
+								loadYamls();
+								data.set(j + ".Check", "False");
+		 						saveYamls();
+	 							if(currentamount == totalamount) {
+		 							sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
+		 							for(j = 1; j <= data.getInt("Total"); j++) {
+										if((data.getString(j + ".Check") == "False") && (data.getInt(j + ".Item") == id)) {
+											loadYamls();
+											data.set(j + ".Check", null);
+											saveYamls();
 										}
 									}
 								}
