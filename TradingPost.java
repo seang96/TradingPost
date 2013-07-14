@@ -132,7 +132,7 @@ public final class TradingPost extends JavaPlugin {
          }
          if(command.getLabel().equals("shop")) {
      		if(args[0].equalsIgnoreCase("Sell")) {
-     			int IDcount = data.getInt("Total");
+     			long IDcount = data.getInt("Total");
  				int amount = Integer.parseInt(args[2]);
  				int price = Integer.parseInt(args[3]);
  				double tax = price * amount * 0.15;
@@ -194,11 +194,13 @@ public final class TradingPost extends JavaPlugin {
 				int currentamount = 0;
 				int totalamount = amount;
 				int itemamount = 0;
-				while(currentamount < totalamount) {
+				int j = 0;
+				while(currentamount != totalamount) {
 					int lowestPrice = 2147483647;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
-	 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status") == "Selling") && (data.getInt(i + ".Price") <= lowestPrice)) {
+	 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status") == "Selling") && (data.getInt(i + ".Price") < lowestPrice)) {
 	 						lowestPrice = data.getInt(i + ".Price"); 
+	 						j= i;
  								if(data.getInt(i + ".Amount") <= amount) {
  									int price = data.getInt(i + ".Price") * data.getInt(i + ".Amount");
  			 						totalprice = + price;
@@ -210,6 +212,7 @@ public final class TradingPost extends JavaPlugin {
 										if(r1.transactionSuccess()) {
 											data.set(i + ".Status", "Sold");
 											saveYamls();
+		 									getLogger().info(String.valueOf(currentamount));
 										}
 									}
  								}
@@ -226,34 +229,34 @@ public final class TradingPost extends JavaPlugin {
  										}
  									}
  		 						}
- 								if(args[3].equalsIgnoreCase("confirm")) {
- 									if(currentamount == totalamount  && currentamount == itemamount) {
-										EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-										if(r.transactionSuccess()) {
-											ItemStack is = new ItemStack (mat, itemamount);
-											p.getInventory().addItem(is);	
-											sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+	 							}
+	 	 					}
+						if(args[3].equalsIgnoreCase("confirm")) {
+								if(currentamount == totalamount  && currentamount == itemamount) {
+								EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+								if(r.transactionSuccess()) {
+									ItemStack is = new ItemStack (mat, itemamount);
+									p.getInventory().addItem(is);	
+									sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+								}
+							}
+						}
+							else {
+								if(!(data.getString(j + ".Check") == "False")) {
+									loadYamls();
+									data.set(j + ".Check", "False");
+		 							saveYamls();
+	 								if(currentamount == totalamount) {
+		 								sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
+		 								for(j = 1; j <= data.getInt("Total"); j++) {
+											if((data.getString(j + ".Check") == "False") && (data.getInt(j + ".Item") == id)) {
+												loadYamls();
+												data.set(j + ".Check", null);
+												saveYamls();
 										}
 									}
 								}
-	 							if(!(args[3].equalsIgnoreCase("confirm"))){
-	 								if(!(data.getString(i + ".Check") == "False")) {
-	 									loadYamls();
-	 									data.set(i + ".Check", "False");
- 			 								saveYamls();
- 		 								if(currentamount == totalamount) {
- 			 								sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
- 			 								for(int i3 = 1; i3 <= data.getInt("Total"); i3++) {
- 												if((data.getString(i3 + ".Check") == "False") && (data.getInt(i3 + ".Item") == id)) {
- 														loadYamls();
- 														data.set(i3 + ".Check", null);
- 														saveYamls();
- 												}
- 											}
- 										}
-	 								}
-	 							}
-	 	 					}
+							}
 	 	 				}
 	 				}
 				}
