@@ -197,7 +197,7 @@ public final class TradingPost extends JavaPlugin {
 				int i = 0;
 				int j = 0;
 				while(currentamount != totalamount) {
-					log.info(String.format("test"));;
+					log.info(String.format("test"));
 					int lowestPrice = 2147483647;
 					for(i = 1; i <= data.getInt("Total"); i++) {
 	 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status") == "Selling") && (data.getInt(i + ".Price") < lowestPrice)) {
@@ -236,12 +236,13 @@ public final class TradingPost extends JavaPlugin {
  		 			}
 				}
 				if(args[3].equalsIgnoreCase("confirm")) {
+					log.info(String.format(args[3]));
 					if(currentamount == totalamount  && currentamount == itemamount) {
-					EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-					if(r.transactionSuccess()) {
-						ItemStack is = new ItemStack (mat, itemamount);
-						p.getInventory().addItem(is);	
-						sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+						EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+						if(r.transactionSuccess()) {
+							ItemStack is = new ItemStack (mat, itemamount);
+							p.getInventory().addItem(is);	
+							sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
 						}
 					}
 				}
