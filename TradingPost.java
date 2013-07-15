@@ -287,36 +287,23 @@ public final class TradingPost extends JavaPlugin {
 				if (config.getBoolean("Debug")) {
 					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
 				}
-				if(data.getInt(j + ".Amount") <= amount) {
-					int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
-					totalprice += price;
-					currentamount += data.getInt(j + ".Amount");
-					amount -= data.getInt(j + ".Amount");
-					if(confirm) {
-						EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-						if(r1.transactionSuccess()) {
+				int buyamount = (data.getInt(j + ".Amount") <= amount) ? data.getInt(j + ".Amount") : amount;
+				int price = data.getInt(j + ".Price") * buyamount;
+				totalprice += price;
+				currentamount += buyamount;
+				amount -= buyamount;
+				if(confirm) {
+					EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
+					if(r1.transactionSuccess()) {
+						data.set(j + ".Amount", (data.getInt(j + ".Amount") - buyamount));
+						if(data.getInt(j + ".Amount") == 0){
 							data.set(j + ".Status", "Sold");
-							saveYamls();
 						}
-					} else {
-						data.set(j + ".Check", "F");
 						saveYamls();
 					}
 				} else {
-					int price = amount * data.getInt(j + ".Price");
-					totalprice += price;
-					currentamount += amount;
-					if(confirm) {
-						EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-						if(r1.transactionSuccess()) {
-							data.set(j + ".Amount", (data.getInt(j + ".Amount") - amount));
-							saveYamls();
-						}
-					}
-					else {
-						data.set(j + ".Check", "F");
-						saveYamls();
-					}
+					data.set(j + ".Check", "F");
+					saveYamls();
 				}
 			}
 			if(confirm) {
