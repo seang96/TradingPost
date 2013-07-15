@@ -195,15 +195,22 @@ public final class TradingPost extends JavaPlugin {
 				int k = 0;
 				int l = 0;
 				int datatotalamount = 0;
-				String enough = "True";
+				boolean enough = true;
+				boolean confirm = true;
+				if((args.length > 3) && (args[3].equalsIgnoreCase("confirm"))) {
+					confirm = true;
+				}
+				else {
+					confirm = false;
+				}
+				for(l = 1; l <= data.getInt("Total"); l++) {
+					if((data.getInt(l + ".Item") == id) && (data.getString(l + ".Status").equals("Selling")) && (data.getString(l + ".Check").equals("T"))) {
+						datatotalamount += data.getInt(l  + ".Amount");
+					}
+				}
 				while(currentamount != totalamount) {
 					log.info(String.format("New Loop"));
 					int lowestPrice = 999999999;
-					for(l = 1; l <= data.getInt("Total"); l++) {
-						if((data.getInt(l + ".Item") == id) && (data.getString(l + ".Status").equals("Selling")) && (data.getString(l + ".Check").equals("T"))) {
-							datatotalamount += data.getInt(l  + ".Amount");
-						}
-					}
 					for(i = 1; i <= data.getInt("Total"); i++) {
 						if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
 							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
@@ -211,12 +218,12 @@ public final class TradingPost extends JavaPlugin {
 								lowestPrice = data.getInt(i + ".Price");
 								j= i;
 								if(datatotalamount < amount) {
-									enough = "False";
+									enough = false;
 								}
 							}
 						}
 					}
-					if(enough.equals("False")) {
+					if(enough = false) {
 						sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 						currentamount = totalamount;
 					} else {
@@ -248,6 +255,7 @@ public final class TradingPost extends JavaPlugin {
 									saveYamls();
 								}
 							}
+							
 							else {
 								data.set(j + ".Check", "False");
 								saveYamls();
@@ -255,7 +263,7 @@ public final class TradingPost extends JavaPlugin {
 						}
 					}
 				}
-				if(enough.equals("True")) {
+				if(enough == true) {
 					if(args.length == 4) {
 						if(args[3].equalsIgnoreCase("confirm")) {
 							log.info(String.format(args[3]));
