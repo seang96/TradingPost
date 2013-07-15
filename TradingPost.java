@@ -194,12 +194,12 @@ public final class TradingPost extends JavaPlugin {
 			}
 			if(Material.matchMaterial(args[2]) != null) {
 				boolean item_specified = true;
-				Material mat = Material.matchMaterial(args[2]);
 			} else {
 				boolean item_specified = false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
 				if(item_specified) {
+					Material mat = Material.matchMaterial(args[2]);
 					int amount = 0;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
 						if(data.getInt(i + ".Item") == mat.getId() && data.getString(i + ".Status").equals("Selling")) {
