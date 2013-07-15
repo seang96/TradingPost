@@ -266,18 +266,14 @@ public final class TradingPost extends JavaPlugin {
 			int j = 0;
 			int i = 0;
 			int k = 0;
-			int datatotalamount = 0;
 			int lowestPrice;
-			while(currentamount != totalamount) {
+			while(amount > 0) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format("New Loop"));
 				}
 				lowestPrice = -1;
 				for(i = 1; i <= data.getInt("Total"); i++) {
 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
-						if (config.getBoolean("Debug")) {
-							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
-						}
 						if(lowestprice < 0 || data.getInt(i + ".Price") < lowestPrice) {
 							lowestPrice = data.getInt(i + ".Price");
 							j= i;
