@@ -193,7 +193,7 @@ public final class TradingPost extends JavaPlugin {
 				return false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
-				if(Material.matchMaterial(args[2]) != null) {
+				if(args.length > 2 && Material.matchMaterial(args[2]) != null) {
 					Material mat = Material.matchMaterial(args[2]);
 					int amount = 0;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
