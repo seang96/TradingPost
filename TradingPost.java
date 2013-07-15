@@ -119,14 +119,18 @@ public final class TradingPost extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
 
 		Player p = (Player) sender;
-
-		if (args.length > 4) {
-			p.sendMessage("Too many arguments!");
-			return false;
+		boolean confirm = true;
+		if(args.length > 4) {
+			sender.sendMessage(String.format("Sytax Error"));
 		}
-		if (args.length < 2) {
-			p.sendMessage("Not enough arguments!");
-			return false;
+		if(args.length < 3) {
+			sender.sendMessage(String.format("Sytax Error"));
+		}
+		if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
+			confirm = true;
+		}
+		else {
+			confirm = false;
 		}
 		if(command.getLabel().equals("shop")) {
 			if(args[0].equalsIgnoreCase("Sell")) {
@@ -196,23 +200,10 @@ public final class TradingPost extends JavaPlugin {
 				int l = 0;
 				int datatotalamount = 0;
 				boolean enough = true;
-				boolean confirm = true;
 				for(i = 1; l <= data.getInt("Total"); l++) {
 					if((data.getInt(l + ".Item") == id) && (data.getString(l + ".Status").equals("Selling")) && (data.getString(l + ".Check").equals("T"))) {
 						datatotalamount += data.getInt(l  + ".Amount");
 					}
-				}
-				if(args.length > 4) {
-					sender.sendMessage(String.format("Sytax Error"));
-				}
-				if(args.length < 3) {
-					sender.sendMessage(String.format("Sytax Error"));
-				}
-				if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
-					confirm = true;
-				}
-				else {
-					confirm = false;
 				}
 				if(datatotalamount < amount) {
 					enough = false;
@@ -221,7 +212,7 @@ public final class TradingPost extends JavaPlugin {
 					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 					currentamount = totalamount;
 					return false;
-				}	
+				}
 				while(currentamount != totalamount) {
 					log.info(String.format("New Loop"));
 					int lowestPrice = 999999999;
