@@ -190,7 +190,7 @@ public final class TradingPost extends JavaPlugin {
 				boolean item_specified = true;
 			}
 			else {
-				item_specified = false;
+				boolean item_specified = false;
 			}
 			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
