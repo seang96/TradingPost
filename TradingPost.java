@@ -125,7 +125,7 @@ public final class TradingPost extends JavaPlugin {
 			return false;
 		}
 		Player p = (Player) sender;
-		boolean confirm = true;
+		boolean confirm;
 		
 		if(args[0].equalsIgnoreCase("Sell")) {
 			if(args.length > 5) {
@@ -184,6 +184,7 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
+			boolean item_specified;
 			Material mat = Material.matchMaterial(args[2]);
 			int id = mat.getId();
 			String mat1 = String.valueOf(mat);
@@ -196,10 +197,10 @@ public final class TradingPost extends JavaPlugin {
 				return false;
 			}
 			if(args.length > 2 && args[2].equalsIgnoreCase(mat1)) {
-				confirm = true;
+				item_specified = true;
 			}
 			else {
-				confirm = false;
+				item_specified = false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
 				int amount = 0;
