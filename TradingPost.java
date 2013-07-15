@@ -267,26 +267,24 @@ public final class TradingPost extends JavaPlugin {
 			int i = 0;
 			int k = 0;
 			int datatotalamount = 0;
-			boolean founditem;
-			int lowestPrice = 999999999;
+			int lowestPrice;
 			while(currentamount != totalamount) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format("New Loop"));
 				}
-				founditem = false;
+				lowestPrice = -1;
 				for(i = 1; i <= data.getInt("Total"); i++) {
 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
 						if (config.getBoolean("Debug")) {
 							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
 						}
-						if(founditem == false || data.getInt(i + ".Price") < lowestPrice) {
-							founditem = true;
+						if(lowestprice < 0 || data.getInt(i + ".Price") < lowestPrice) {
 							lowestPrice = data.getInt(i + ".Price");
 							j= i;
 						}
 					}
 				}
-				if(!founditem) {
+				if(lowestprice < 0) {
 					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 					return false;
 				}
@@ -303,9 +301,6 @@ public final class TradingPost extends JavaPlugin {
 						if(r1.transactionSuccess()) {
 							data.set(j + ".Status", "Sold");
 							saveYamls();
-							if (config.getBoolean("Debug")) {
-								getLogger().info("C = " + String.valueOf(currentamount + " T = " + String.valueOf(totalamount)));
-							}
 						}
 					} else {
 						data.set(j + ".Check", "F");
