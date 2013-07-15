@@ -287,7 +287,7 @@ public final class TradingPost extends JavaPlugin {
 				if (config.getBoolean("Debug")) {
 					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
 				}
-				int buyamount = (data.getInt(j + ".Amount") <= amount) ? data.getInt(j + ".Amount") : amount;
+				int buyamount = (data.getInt(j + ".Amount") < amount) ? data.getInt(j + ".Amount") : amount;
 				int price = data.getInt(j + ".Price") * buyamount;
 				totalprice += price;
 				currentamount += buyamount;
