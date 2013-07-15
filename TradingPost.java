@@ -186,7 +186,6 @@ public final class TradingPost extends JavaPlugin {
 		else if(args[0].equalsIgnoreCase("List")) {
 			if(args.length > 2 && args[2].equalsIgnoreCase(String.valueOf(Material.matchMaterial(args[2])))) {
 				Material mat = Material.matchMaterial(args[2]);
-				int id = mat.getId();
 				boolean item_specified = true;
 			}
 			else {
@@ -204,7 +203,7 @@ public final class TradingPost extends JavaPlugin {
 				if(item_specified) {
 					int amount = 0;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
-						if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
+						if(data.getInt(i + ".ID") == mat.getId() && data.getString(i + ".Status").equals("Selling")) {
 							amount =+ data.getInt(i + ".Amount");
 						}
 					}
