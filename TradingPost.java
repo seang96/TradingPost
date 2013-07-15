@@ -197,12 +197,11 @@ public final class TradingPost extends JavaPlugin {
 				int j = 0;
 				int i = 0;
 				int k = 0;
-				int l = 0;
 				int datatotalamount = 0;
 				boolean enough = true;
-				for(i = 1; l <= data.getInt("Total"); l++) {
-					if((data.getInt(l + ".Item") == id) && (data.getString(l + ".Status").equals("Selling")) && (data.getString(l + ".Check").equals("T"))) {
-						datatotalamount += data.getInt(l  + ".Amount");
+				for(i = 1; i <= data.getInt("Total"); i++) {
+					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
+						datatotalamount += data.getInt(i  + ".Amount");
 					}
 				}
 				if(datatotalamount < amount) {
