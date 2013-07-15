@@ -217,10 +217,11 @@ public final class TradingPost extends JavaPlugin {
 				if(datatotalamount < amount) {
 					enough = false;
 				}
-				if(enough = false) {
+				if(!enough) {
 					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 					currentamount = totalamount;
-				} else {
+					return false;
+				}	
 				while(currentamount != totalamount) {
 					log.info(String.format("New Loop"));
 					int lowestPrice = 999999999;
@@ -233,39 +234,37 @@ public final class TradingPost extends JavaPlugin {
 							}
 						}
 					}
-						getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
-						if(data.getInt(j + ".Amount") <= amount) {
-							int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
-							totalprice += price;
-							currentamount += data.getInt(j + ".Amount");
-							amount -= data.getInt(j + ".Amount");
-							if(args[3].equalsIgnoreCase("confirm")) {
-								EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-								if(r1.transactionSuccess()) {
-									data.set(j + ".Status", "Sold");
-									saveYamls();
-									getLogger().info("C = " + String.valueOf(currentamount + " T = " + String.valueOf(totalamount)));
-								}
-							} else {
-								data.set(j + ".Check", "False");
+					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
+					if(data.getInt(j + ".Amount") <= amount) {
+						int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
+						totalprice += price;
+						currentamount += data.getInt(j + ".Amount");
+						amount -= data.getInt(j + ".Amount");
+						if(args[3].equalsIgnoreCase("confirm")) {
+							EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
+							if(r1.transactionSuccess()) {
+								data.set(j + ".Status", "Sold");
+								saveYamls();
+								getLogger().info("C = " + String.valueOf(currentamount + " T = " + String.valueOf(totalamount)));
+							}
+						} else {
+							data.set(j + ".Check", "False");
+							saveYamls();
+						}
+					} else if(data.getInt(j + ".Amount") > amount) {
+						int price = amount * data.getInt(j + ".Price");
+						totalprice += price;
+						currentamount += amount;
+						if(args[3].equalsIgnoreCase("confirm")) {
+							EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
+							if(r1.transactionSuccess()) {
+								data.set(j + ".Amount", (data.getInt(j + ".Amount") - amount));
 								saveYamls();
 							}
-						} else if(data.getInt(j + ".Amount") > amount) {
-							int price = amount * data.getInt(j + ".Price");
-							totalprice += price;
-							currentamount += amount;
-							if(args[3].equalsIgnoreCase("confirm")) {
-								EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-								if(r1.transactionSuccess()) {
-									data.set(j + ".Amount", (data.getInt(j + ".Amount") - amount));
-									saveYamls();
-								}
-							}
-							
-							else {
-								data.set(j + ".Check", "False");
-								saveYamls();
-							}
+						}
+						else {
+							data.set(j + ".Check", "False");
+							saveYamls();
 						}
 					}
 				}
