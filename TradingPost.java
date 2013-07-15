@@ -268,35 +268,28 @@ public final class TradingPost extends JavaPlugin {
 			int i = 0;
 			int k = 0;
 			int datatotalamount = 0;
-			boolean enough = true;
-			for(i = 1; i <= data.getInt("Total"); i++) {
-				if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
-					datatotalamount += data.getInt(i  + ".Amount");
-				}
-			}
-			if(datatotalamount < amount) {
-				enough = false;
-			}
-			if(!enough) {
-				sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
-				currentamount = totalamount;
-				return false;
-			}
+			boolean founditem;
+			int lowestPrice;
 			while(currentamount != totalamount) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format("New Loop"));
 				}
-				int lowestPrice = 999999999;
+				founditem = false;
 				for(i = 1; i <= data.getInt("Total"); i++) {
 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
 						if (config.getBoolean("Debug")) {
 							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
 						}
-						if(data.getInt(i + ".Price") < lowestPrice) {
+						if(founditem == false || data.getInt(i + ".Price") < lowestPrice) {
+							founditem = true;
 							lowestPrice = data.getInt(i + ".Price");
 							j= i;
 						}
 					}
+				}
+				if(!founditem) {
+					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
+					return false;
 				}
 				if (config.getBoolean("Debug")) {
 					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
