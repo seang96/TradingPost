@@ -1,1 +1,4 @@
-#Config file
+#Taxes is calculated in percentage
+Taxes: 15
+#Turn debug mode on
+Debug: true
