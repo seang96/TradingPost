@@ -185,9 +185,18 @@ public final class TradingPost extends JavaPlugin {
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
 			boolean item_specified;
-			Material mat = Material.matchMaterial(args[2]);
-			int id = mat.getId();
-			String mat1 = String.valueOf(mat);
+			if(args.length > 2 && args[2].equalsIgnoreCase(mat1)) {
+				Material mat = Material.matchMaterial(args[2]);
+				String mat1 = String.valueOf(mat);
+				int id = mat.getId();
+				if(args[2].equalsIgnoreCase(mat1)){
+					item_specified = true;
+				}else{
+					item_specified = false;
+				}
+			} else {
+				item_specified = false;
+			}
 			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
@@ -195,12 +204,6 @@ public final class TradingPost extends JavaPlugin {
 			if(args.length < 2) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
-			}
-			if(args.length > 2 && args[2].equalsIgnoreCase(mat1)) {
-				item_specified = true;
-			}
-			else {
-				item_specified = false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
 				int amount = 0;
