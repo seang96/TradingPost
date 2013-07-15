@@ -192,13 +192,8 @@ public final class TradingPost extends JavaPlugin {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
 			}
-			if(Material.matchMaterial(args[2]) != null) {
-				boolean item_specified = true;
-			} else {
-				boolean item_specified = false;
-			}
 			if(args[1].equalsIgnoreCase("amount")) {
-				if(item_specified) {
+				if(Material.matchMaterial(args[2]) != null) {
 					Material mat = Material.matchMaterial(args[2]);
 					int amount = 0;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
