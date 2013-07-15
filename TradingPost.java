@@ -184,17 +184,20 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
+			Material mat;
+			int id = 0;
 			boolean item_specified;
-			if(args.length > 2) {
-				Material mat = Material.matchMaterial(args[2]);
-				String mat1 = String.valueOf(mat);
-				int id = mat.getId();
-				if(args[2].equalsIgnoreCase(mat1)){
+			if(args.length > 2 && args[2].equalsIgnoreCase(String.valueOf(Material.matchMaterial(args[2])))) {
+				mat = Material.matchMaterial(args[2]);
+				id = mat.getId();
+				if(args[2].equalsIgnoreCase(String.valueOf(Material.matchMaterial(args[2])))){
 					item_specified = true;
-				}else{
+				}
+				else{
 					item_specified = false;
 				}
-			} else {
+			}
+			else {
 				item_specified = false;
 			}
 			if(args.length > 3) {
@@ -206,19 +209,24 @@ public final class TradingPost extends JavaPlugin {
 				return false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
-				int amount = 0;
-				for(int i = 1; i <= data.getInt("Total"); i++) {
-					if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
-						amount =+ data.getInt(i + ".Amount");
+				if(item_specified) {
+					int amount = 0;
+					for(int i = 1; i <= data.getInt("Total"); i++) {
+						if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
+							amount =+ data.getInt(i + ".Amount");
+						}
+					}
+					String totalamount = String.valueOf(amount);
+					if(amount == 1) {
+						sender.sendMessage(String.format("There is only " + totalamount + " of " + args[2] + " left."));
+					} else if(amount == 0) {
+						sender.sendMessage(String.format("There are none of " + args[2] + " on the market."));
+					} else {
+						sender.sendMessage(String.format("There are " + totalamount + " of " + args[2] + " left."));
 					}
 				}
-				String totalamount = String.valueOf(amount);
-				if(amount == 1) {
-					sender.sendMessage(String.format("There is only " + totalamount + " of " + args[2] + " left."));
-				} else if(amount == 0) {
-					sender.sendMessage(String.format("There are none of " + args[2] + " on the market."));
-				} else {
-					sender.sendMessage(String.format("There are " + totalamount + " of " + args[2] + " left."));
+				else {
+					sender.sendMessage(String.format("Please specify an item."));
 				}
 			}
 			if(args[1].equalsIgnoreCase("common")) {
