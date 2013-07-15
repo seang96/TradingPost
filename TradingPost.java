@@ -201,7 +201,7 @@ public final class TradingPost extends JavaPlugin {
 			else {
 				confirm = false;
 			}
-			if(args[2].equalsIgnoreCase("amount")) {
+			if(args[1].equalsIgnoreCase("amount")) {
 				int amount = 0;
 				for(int i = 1; i <= data.getInt("Total"); i++) {
 					if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
