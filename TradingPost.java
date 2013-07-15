@@ -306,7 +306,7 @@ public final class TradingPost extends JavaPlugin {
 						data.set(j + ".Check", "F");
 						saveYamls();
 					}
-				} else if(data.getInt(j + ".Amount") > amount) {
+				} else {
 					int price = amount * data.getInt(j + ".Price");
 					totalprice += price;
 					currentamount += amount;
@@ -327,29 +327,25 @@ public final class TradingPost extends JavaPlugin {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format(args[3]));
 				}
-				if(currentamount == totalamount) {
-					EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-					if(r.transactionSuccess()) {
-						ItemStack is = new ItemStack (mat, currentamount);
-						p.getInventory().addItem(is);
-						sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
-					}
+				EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+				if(r.transactionSuccess()) {
+					ItemStack is = new ItemStack (mat, currentamount);
+					p.getInventory().addItem(is);
+					sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
 				}
 			}
 			else {
-				if(currentamount == totalamount) {
-					sender.sendMessage(String.format("You will pay " + totalprice + " for " + currentamount + " of " + mat + "."));
-					for(k = 1; k <= data.getInt("Total"); k++) {
-						if((data.getString(k + ".Check").equals("F"))) {
-							loadYamls();
-							data.set(k + ".Check", "T");
-							saveYamls();
-						}
+				sender.sendMessage(String.format("You will pay " + totalprice + " for " + currentamount + " of " + mat + "."));
+				for(k = 1; k <= data.getInt("Total"); k++) {
+					if((data.getString(k + ".Check").equals("F"))) {
+						loadYamls();
+						data.set(k + ".Check", "T");
+						saveYamls();
 					}
 				}
 			}
-		return true;
-	}
+			return true;
+		}
 	return false;
 	}
 }
