@@ -202,14 +202,20 @@ public final class TradingPost extends JavaPlugin {
 						datatotalamount += data.getInt(l  + ".Amount");
 					}
 				}
-				if(datatotalamount < amount) {
-					enough = false;
+				if(args.length > 4) {
+					sender.sendMessage(String.format("Sytax Error"));
+				}
+				if(args.length < 3) {
+					sender.sendMessage(String.format("Sytax Error"));
 				}
 				if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
 					confirm = true;
 				}
 				else {
 					confirm = false;
+				}
+				if(datatotalamount < amount) {
+					enough = false;
 				}
 				if(enough = false) {
 					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
@@ -263,20 +269,18 @@ public final class TradingPost extends JavaPlugin {
 						}
 					}
 				}
-				if(args.length == 4) {
-					if(args[3].equalsIgnoreCase("confirm")) {
-						log.info(String.format(args[3]));
-						if(currentamount == totalamount) {
-							EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-							if(r.transactionSuccess()) {
-								ItemStack is = new ItemStack (mat, currentamount);
-								p.getInventory().addItem(is);
-								sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
-							}
+				if(confirm) {
+					log.info(String.format(args[3]));
+					if(currentamount == totalamount) {
+						EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+						if(r.transactionSuccess()) {
+							ItemStack is = new ItemStack (mat, currentamount);
+							p.getInventory().addItem(is);
+							sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
 						}
 					}
 				}
-				if(args.length == 3) {
+				else {
 					if(currentamount == totalamount) {
 						sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
 						for(k = 1; k <= data.getInt("Total"); k++) {
