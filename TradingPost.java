@@ -262,7 +262,6 @@ public final class TradingPost extends JavaPlugin {
 			int amount = Integer.parseInt(args[2]);
 			int totalprice = 0;
 			int currentamount = 0;
-			int totalamount = amount;
 			int j = 0;
 			int i = 0;
 			int k = 0;
@@ -314,7 +313,7 @@ public final class TradingPost extends JavaPlugin {
 				if(r.transactionSuccess()) {
 					ItemStack is = new ItemStack (mat, currentamount);
 					p.getInventory().addItem(is);
-					sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+					sender.sendMessage(String.format("You have bought " + currentamount + " of " + mat + " for " + totalprice + "."));
 				}
 			}
 			else {
