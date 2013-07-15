@@ -45,6 +45,9 @@ public final class TradingPost extends JavaPlugin {
 		} else {
 			log.info(String.format("[%s] - Vault dependency found!", getDescription().getName()));
 		}
+		if (config.getBoolean("Debug", true)) {
+			log.info(String.format("[%s] - You are in debug mode!", getDescription().getName()));
+		}
 		setupPermissions();
 		config = new YamlConfiguration();
 		data = new YamlConfiguration();
@@ -117,30 +120,39 @@ public final class TradingPost extends JavaPlugin {
 	}
 
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
-
+		if(!command.getLabel().equals("shop")) {
+			return false;
+		}
 		Player p = (Player) sender;
 		boolean confirm = true;
-		if(args.length > 4) {
-			sender.sendMessage(String.format("Sytax Error"));
-		}
-		if(args.length < 3) {
-			sender.sendMessage(String.format("Sytax Error"));
-		}
-		if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
-			confirm = true;
-		}
-		else {
-			confirm = false;
-		}
-		if(command.getLabel().equals("shop")) {
-			if(args[0].equalsIgnoreCase("Sell")) {
-				long IDcount = data.getInt("Total");
-				int amount = Integer.parseInt(args[2]);
-				int price = Integer.parseInt(args[3]);
-				double tax = price * amount * 0.15;
-				Material mat = Material.matchMaterial(args[1]);
-				int id = mat.getId();
-				ItemStack is = new ItemStack (mat, amount);
+		
+		if(args[0].equalsIgnoreCase("Sell")) {
+			if(args.length > 5) {
+				sender.sendMessage("Correct Usage:");
+				sender.sendMessage("/shop sell <Item|ID> <Amount> <Price> [confirm]");
+				return false;
+			}
+			if(args.length < 4) {
+				sender.sendMessage("Correct Usage:");
+				sender.sendMessage("/shop sell <Item|ID> <Amount> <Price> [confirm]");
+				return false;
+			}
+			if(args.length > 4 && args[4].equalsIgnoreCase("confirm")) {
+				confirm = true;
+			}
+			else {
+				confirm = false;
+			}
+			long IDcount = data.getInt("Total");
+			int amount = Integer.parseInt(args[2]);
+			int price = Integer.parseInt(args[3]);
+			int totalprice = price * amount;
+			double tax = Math.round(price * amount * (config.getInt("Taxes") / 100) * 100) / 100 ;
+			int t1 = config.getInt("Taxes");
+			Material mat = Material.matchMaterial(args[1]);
+			int id = mat.getId();
+			ItemStack is = new ItemStack (mat, amount);
+			if(confirm) {
 				if(p.getInventory().contains(mat, amount)) {
 					p.getInventory().removeItem(is);
 					EconomyResponse r = econ.withdrawPlayer(p.getName(), tax);
@@ -161,129 +173,176 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 			}
-			if(args[0].equalsIgnoreCase("List")) {
-				if(args[2].equalsIgnoreCase("amount")) {
-					int amountc = 0 + data.getInt("Amount");
-					String totalamount = String.valueOf(amountc);
-					if(amountc == 1) {
-						sender.sendMessage(String.format("There is only " + String.valueOf(totalamount) + " of " + args[1] + " left."));
-					} else if(amountc == 0) {
-						sender.sendMessage(String.format("There are none of " + args[1] + " on the market."));
-					} else {
-						sender.sendMessage(String.format("There are " + String.valueOf(totalamount) + " of " + args[1] + " lerft."));
-					}
+			else {
+				if (config.getBoolean("Debug")) {
+					log.info(String.format("t = " + t1));
 				}
-				if(args[1].equalsIgnoreCase("common")) {
-					//Most amount of items in ID, displays the top 10
-
-				}
-				if(args[1].equalsIgnoreCase("expensive")) {
-					//Most expensive items on the market by ID, displays top 10, (also checks the cheapest of that item ID to be the most expensive)
-
-				}
-				if(args[1].equalsIgnoreCase("recent")) {
-					//Most recent items added to being sold
-
+				sender.sendMessage("You will sell " + args[2] + " " + args[1] + ". The total price will be " + String.valueOf(totalprice) + ". With the cost of " + String.valueOf(tax) + " for taxes.");
+			}
+		}
+		else if(args[0].equalsIgnoreCase("List")) {
+			if(args.length > 4) {
+				sender.sendMessage(String.format("Sytax Error"));
+				return false;
+			}
+			if(args.length < 3) {
+				sender.sendMessage(String.format("Sytax Error"));
+				return false;
+			}
+			if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
+				confirm = true;
+			}
+			else {
+				confirm = false;
+			}
+			if(args[2].equalsIgnoreCase("amount")) {
+				int amountc = 0 + data.getInt("Amount");
+				String totalamount = String.valueOf(amountc);
+				if(amountc == 1) {
+					sender.sendMessage(String.format("There is only " + String.valueOf(totalamount) + " of " + args[1] + " left."));
+				} else if(amountc == 0) {
+					sender.sendMessage(String.format("There are none of " + args[1] + " on the market."));
+				} else {
+					sender.sendMessage(String.format("There are " + String.valueOf(totalamount) + " of " + args[1] + " lerft."));
 				}
 			}
-			if(args[0].equalsIgnoreCase("Buy")) {
-				//Find cheapest price of item, buy that first until it is empty, delete lines in yml if empty, and if buyer has more amount then go for the next cheapest
-				Material mat = Material.matchMaterial(args[1]);
-				int id = mat.getId();
-				int amount = Integer.parseInt(args[2]);
-				int totalprice = 0;
-				int currentamount = 0;
-				int totalamount = amount;
-				int j = 0;
-				int i = 0;
-				int k = 0;
-				int datatotalamount = 0;
-				boolean enough = true;
+			if(args[1].equalsIgnoreCase("common")) {
+				//Most amount of items in ID, displays the top 10
+				}
+			if(args[1].equalsIgnoreCase("expensive")) {
+				//Most expensive items on the market by ID, displays top 10, (also checks the cheapest of that item ID to be the most expensive)
+
+			}
+			if(args[1].equalsIgnoreCase("recent")) {
+				//Most recent items added to being sold
+
+			}
+		}
+		else if(args[0].equalsIgnoreCase("Buy")) {
+			//Find cheapest price of item, buy that first until it is empty, delete lines in yml if empty, and if buyer has more amount then go for the next cheapest
+			
+			if(args.length > 4) {
+				sender.sendMessage("Correct Usage:");
+				sender.sendMessage("/shop buy <Item|ID> <Amount> [confirm]");
+				return false;
+			}
+			if(args.length < 3) {
+				sender.sendMessage("Correct Usage:");
+				sender.sendMessage("/shop buy <Item|ID> <Amount> [confirm]");
+				return false;
+			}
+			if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
+				confirm = true;
+			}
+			else {
+				confirm = false;
+			}
+			
+			Material mat = Material.matchMaterial(args[1]);
+			int id = mat.getId();
+			int amount = Integer.parseInt(args[2]);
+			int totalprice = 0;
+			int currentamount = 0;
+			int totalamount = amount;
+			int j = 0;
+			int i = 0;
+			int k = 0;
+			int datatotalamount = 0;
+			boolean enough = true;
+			for(i = 1; i <= data.getInt("Total"); i++) {
+				if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
+					datatotalamount += data.getInt(i  + ".Amount");
+				}
+			}
+			if(datatotalamount < amount) {
+				enough = false;
+			}
+			if(!enough) {
+				sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
+				currentamount = totalamount;
+				return false;
+			}
+			while(currentamount != totalamount) {
+				if (config.getBoolean("Debug")) {
+					log.info(String.format("New Loop"));
+				}
+				int lowestPrice = 999999999;
 				for(i = 1; i <= data.getInt("Total"); i++) {
 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
-						datatotalamount += data.getInt(i  + ".Amount");
-					}
-				}
-				if(datatotalamount < amount) {
-					enough = false;
-				}
-				if(!enough) {
-					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
-					currentamount = totalamount;
-					return false;
-				}
-				while(currentamount != totalamount) {
-					log.info(String.format("New Loop"));
-					int lowestPrice = 999999999;
-					for(i = 1; i <= data.getInt("Total"); i++) {
-						if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
+						if (config.getBoolean("Debug")) {
 							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
-							if(data.getInt(i + ".Price") < lowestPrice) {
-								lowestPrice = data.getInt(i + ".Price");
-								j= i;
-							}
+						}
+						if(data.getInt(i + ".Price") < lowestPrice) {
+							lowestPrice = data.getInt(i + ".Price");
+							j= i;
 						}
 					}
+				}
+				if (config.getBoolean("Debug")) {
 					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
-					if(data.getInt(j + ".Amount") <= amount) {
-						int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
-						totalprice += price;
-						currentamount += data.getInt(j + ".Amount");
-						amount -= data.getInt(j + ".Amount");
-						if(args[3].equalsIgnoreCase("confirm")) {
-							EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-							if(r1.transactionSuccess()) {
-								data.set(j + ".Status", "Sold");
-								saveYamls();
+				}
+				if(data.getInt(j + ".Amount") <= amount) {
+					int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
+					totalprice += price;
+					currentamount += data.getInt(j + ".Amount");
+					amount -= data.getInt(j + ".Amount");
+					if(confirm) {
+						EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
+						if(r1.transactionSuccess()) {
+							data.set(j + ".Status", "Sold");
+							saveYamls();
+							if (config.getBoolean("Debug")) {
 								getLogger().info("C = " + String.valueOf(currentamount + " T = " + String.valueOf(totalamount)));
 							}
-						} else {
-							data.set(j + ".Check", "False");
-							saveYamls();
 						}
-					} else if(data.getInt(j + ".Amount") > amount) {
-						int price = amount * data.getInt(j + ".Price");
-						totalprice += price;
-						currentamount += amount;
-						if(args[3].equalsIgnoreCase("confirm")) {
-							EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
-							if(r1.transactionSuccess()) {
-								data.set(j + ".Amount", (data.getInt(j + ".Amount") - amount));
-								saveYamls();
-							}
-						}
-						else {
-							data.set(j + ".Check", "False");
+					} else {
+						data.set(j + ".Check", "F");
+						saveYamls();
+					}
+				} else if(data.getInt(j + ".Amount") > amount) {
+					int price = amount * data.getInt(j + ".Price");
+					totalprice += price;
+					currentamount += amount;
+					if(confirm) {
+						EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
+						if(r1.transactionSuccess()) {
+							data.set(j + ".Amount", (data.getInt(j + ".Amount") - amount));
 							saveYamls();
 						}
 					}
+					else {
+						data.set(j + ".Check", "F");
+						saveYamls();
+					}
 				}
-				if(confirm) {
+			}
+			if(confirm) {
+				if (config.getBoolean("Debug")) {
 					log.info(String.format(args[3]));
-					if(currentamount == totalamount) {
-						EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
-						if(r.transactionSuccess()) {
-							ItemStack is = new ItemStack (mat, currentamount);
-							p.getInventory().addItem(is);
-							sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
-						}
+				}
+				if(currentamount == totalamount) {
+					EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
+					if(r.transactionSuccess()) {
+						ItemStack is = new ItemStack (mat, currentamount);
+						p.getInventory().addItem(is);
+						sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
 					}
 				}
-				else {
-					if(currentamount == totalamount) {
-						sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
-						for(k = 1; k <= data.getInt("Total"); k++) {
-							if((data.getString(k + ".Check").equals("F"))) {
-								loadYamls();
-								data.set(k + ".Check", "T");
-								saveYamls();
-							}
+			}
+			else {
+				if(currentamount == totalamount) {
+					sender.sendMessage(String.format("You will pay " + totalprice + " for " + currentamount + " of " + mat + "."));
+					for(k = 1; k <= data.getInt("Total"); k++) {
+						if((data.getString(k + ".Check").equals("F"))) {
+							loadYamls();
+							data.set(k + ".Check", "T");
+							saveYamls();
 						}
 					}
 				}
 			}
-			return true;
-		}
-		return false;
+		return true;
+	}
+	return false;
 	}
 }
