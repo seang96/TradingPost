@@ -197,22 +197,26 @@ public final class TradingPost extends JavaPlugin {
 				int j = 0;
 				int i = 0;
 				int k = 0;
+				int l = 0;
 				int datatotalamount = 0;
 				String enough = "True";
 				while(currentamount != totalamount) {
 					log.info(String.format("New Loop"));
-					int lowestPrice = 2147483647;
-					for(i = 1; i <= data.getInt("Total"); i++) {
-						if((data.getInt(i + ".Item") == id)) {
-							datatotalamount += data.getInt(i  + ".Amount");
-							if(datatotalamount >= amount) {
-								if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T")) && (data.getInt(i + ".Price") < lowestPrice)) {
-									lowestPrice = data.getInt(i + ".Price"); 
-									j= i;
-							}
+					int lowestPrice = 999999999;
+					for(l = 1; l <= data.getInt("Total"); l++) {
+						if((data.getInt(l + ".Item") == id) && (data.getString(l + ".Status").equals("Selling")) && (data.getString(l + ".Check").equals("T"))) {
+							datatotalamount += data.getInt(l  + ".Amount");
 						}
-							else if(datatotalamount < amount){
+					}
+					for(i = 1; i <= data.getInt("Total"); i++) {
+						if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
+							getLogger().info("dta= " + String.valueOf(datatotalamount) + " i= " + String.valueOf(i) + " a = " + String.valueOf(amount));
+							if(data.getInt(i + ".Price") < lowestPrice) {
+								lowestPrice = data.getInt(i + ".Price"); 
+								j= i;
+							if(datatotalamount < amount){
 								enough = "False";
+								}
 							}
 						}
 					}
@@ -221,7 +225,7 @@ public final class TradingPost extends JavaPlugin {
 						currentamount = totalamount;
 					}
 					else {
-						getLogger().info("J= " + String.valueOf(j));
+						getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
  						if(data.getInt(j + ".Amount") <= amount) {
  							int price = data.getInt(j + ".Price") * data.getInt(j + ".Amount");
  			 				totalprice += price;
@@ -230,7 +234,7 @@ public final class TradingPost extends JavaPlugin {
  			 	 			if(args[3].equalsIgnoreCase("confirm")) {
 								EconomyResponse r1 = econ.depositPlayer(data.getString(j + ".Player"), price);
 								if(r1.transactionSuccess()) {
-									data.set(j + ".Status", 1);
+									data.set(j + ".Status", "Sold");
 									saveYamls();
 		 							getLogger().info("C = " + String.valueOf(currentamount + " T = " + String.valueOf(totalamount)));
 								}
@@ -259,7 +263,8 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 				if(enough.equals("True")) {
-					if(args.length == 4 && args[3].equalsIgnoreCase("confirm")) {
+					if(args.length == 4) {
+						if(args[3].equalsIgnoreCase("confirm")) {
 						log.info(String.format(args[3]));
 						if(currentamount == totalamount) {
 							EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
@@ -267,10 +272,11 @@ public final class TradingPost extends JavaPlugin {
 								ItemStack is = new ItemStack (mat, currentamount);
 								p.getInventory().addItem(is);	
 								sender.sendMessage(String.format("You have bought " + totalamount + " of " + mat + " for " + totalprice + "."));
+								}
 							}
 						}
 					}
-					else {
+					if(args.length == 3) {
 						if(currentamount == totalamount) {
 							sender.sendMessage(String.format("You will pay " + totalprice + " for " + amount + " of " + mat + "."));
 							for(k = 1; k <= data.getInt("Total"); k++) {
