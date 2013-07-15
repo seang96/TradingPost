@@ -184,13 +184,10 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
-			if(args.length > 2 && args[2].equalsIgnoreCase(String.valueOf(Material.matchMaterial(args[2])))) {
-				Material mat = Material.matchMaterial(args[2]);
-				int id = mat.getId();
-				boolean item_specified = true;
-			}
-			else {
-				boolean item_specified = false;
+			Material mat = Material.matchMaterial(args[2]);
+			boolean item_specified;
+			if (config.getBoolean("Debug")) {
+				log.info(String.format("id = " + String.valueOf(mat.getId()) + " MM = " + String.valueOf(Material.matchMaterial(args[2]))));
 			}
 			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
@@ -200,21 +197,29 @@ public final class TradingPost extends JavaPlugin {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
 			}
+			if(args.length == 3 && (args[2].equalsIgnoreCase(String.valueOf(mat.getId())) || args[2].equalsIgnoreCase(String.valueOf(Material.matchMaterial(args[2]))))) {
+				item_specified = true;
+			}
+			else {
+				item_specified = false;
+			}
 			if(args[1].equalsIgnoreCase("amount")) {
 				if(item_specified) {
 					int amount = 0;
 					for(int i = 1; i <= data.getInt("Total"); i++) {
-						if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
-							amount =+ data.getInt(i + ".Amount");
+						if(data.getInt(i + ".Item") == mat.getId() && data.getString(i + ".Status").equals("Selling")) {
+							amount += data.getInt(i + ".Amount");
+							if(config.getBoolean("Debug")) {
+								log.info(String.format("A = " + amount));
+							}
 						}
 					}
-					String totalamount = String.valueOf(amount);
 					if(amount == 1) {
-						sender.sendMessage(String.format("There is only " + totalamount + " of " + args[2] + " left."));
+						sender.sendMessage(String.format("There is only " + amount + " " + args[2] + " left."));
 					} else if(amount == 0) {
-						sender.sendMessage(String.format("There are none of " + args[2] + " on the market."));
+						sender.sendMessage(String.format("There is no " + args[2] + " on the market."));
 					} else {
-						sender.sendMessage(String.format("There are " + totalamount + " of " + args[2] + " left."));
+						sender.sendMessage(String.format("There are " + amount + " " + args[2] + " left."));
 					}
 				}
 				else {
@@ -273,7 +278,7 @@ public final class TradingPost extends JavaPlugin {
 			int k = 0;
 			int datatotalamount = 0;
 			boolean founditem;
-			int lowestPrice;
+			int lowestPrice = 999999999;
 			while(currentamount != totalamount) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format("New Loop"));
