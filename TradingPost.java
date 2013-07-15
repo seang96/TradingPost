@@ -45,13 +45,14 @@ public final class TradingPost extends JavaPlugin {
 		} else {
 			log.info(String.format("[%s] - Vault dependency found!", getDescription().getName()));
 		}
-		if (config.getBoolean("Debug", true)) {
-			log.info(String.format("[%s] - You are in debug mode!", getDescription().getName()));
-		}
 		setupPermissions();
 		config = new YamlConfiguration();
 		data = new YamlConfiguration();
 		loadYamls();
+		if (config.getBoolean("Debug", true)) {
+			log.info(String.format("[%s] - You are in debug mode!", getDescription().getName()));
+		}
+
 	}
 
 	@Override
@@ -147,8 +148,10 @@ public final class TradingPost extends JavaPlugin {
 			int amount = Integer.parseInt(args[2]);
 			int price = Integer.parseInt(args[3]);
 			int totalprice = price * amount;
-			double tax = Math.round(price * amount * (config.getInt("Taxes") / 100) * 100) / 100 ;
-			int t1 = config.getInt("Taxes");
+			double t = config.getInt("Taxes");
+			double t1 = t / 100;
+			double tax = price * amount * t1;
+			tax = (double) ((int) ((tax + 0.005) * 100) % Integer.MAX_VALUE) / 100;
 			Material mat = Material.matchMaterial(args[1]);
 			int id = mat.getId();
 			ItemStack is = new ItemStack (mat, amount);
@@ -181,29 +184,37 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
-			if(args.length > 4) {
+			Material mat = Material.matchMaterial(args[2]);
+			int id = mat.getId();
+			String mat1 = String.valueOf(mat);
+			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
 			}
-			if(args.length < 3) {
+			if(args.length < 2) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
 			}
-			if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
+			if(args.length > 2 && args[2].equalsIgnoreCase(mat1)) {
 				confirm = true;
 			}
 			else {
 				confirm = false;
 			}
 			if(args[2].equalsIgnoreCase("amount")) {
-				int amountc = 0 + data.getInt("Amount");
-				String totalamount = String.valueOf(amountc);
-				if(amountc == 1) {
-					sender.sendMessage(String.format("There is only " + String.valueOf(totalamount) + " of " + args[1] + " left."));
-				} else if(amountc == 0) {
-					sender.sendMessage(String.format("There are none of " + args[1] + " on the market."));
+				int amount = 0;
+				for(int i = 1; i <= data.getInt("Total"); i++) {
+					if(data.getInt(i + ".ID") == id && data.getString(i + ".Status").equals("Selling")) {
+						amount =+ data.getInt(i + ".Amount");
+					}
+				}
+				String totalamount = String.valueOf(amount);
+				if(amount == 1) {
+					sender.sendMessage(String.format("There is only " + totalamount + " of " + args[2] + " left."));
+				} else if(amount == 0) {
+					sender.sendMessage(String.format("There are none of " + args[2] + " on the market."));
 				} else {
-					sender.sendMessage(String.format("There are " + String.valueOf(totalamount) + " of " + args[1] + " lerft."));
+					sender.sendMessage(String.format("There are " + totalamount + " of " + args[2] + " left."));
 				}
 			}
 			if(args[1].equalsIgnoreCase("common")) {
@@ -215,7 +226,16 @@ public final class TradingPost extends JavaPlugin {
 			}
 			if(args[1].equalsIgnoreCase("recent")) {
 				//Most recent items added to being sold
-
+				int i = data.getInt("Total");
+				int printed_items = 0;
+				while(i>0 && printed_items <10){
+					if(data.getString(i + ".Status").equals("Selling"))
+					{
+						sender.sendMessage(String.format("A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + "."));
+						printed_items++;
+					}
+					i--;
+				}
 			}
 		}
 		else if(args[0].equalsIgnoreCase("Buy")) {
