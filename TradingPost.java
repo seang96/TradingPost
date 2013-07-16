@@ -139,13 +139,19 @@ public final class TradingPost extends JavaPlugin {
 
 		if (args[0].equalsIgnoreCase("Sell")) {
 			if (args.length > 5) {
-				sender.sendMessage("Correct Usage:");
-				sender.sendMessage("/shop sell <Item|ID> <Amount> <Price> [confirm]");
+				sender.sendMessage(String.format("[%s] Syntax error.",
+						getDescription().getName()));
+				sender.sendMessage(String
+						.format("[%s] Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args.length < 4) {
-				sender.sendMessage("Correct Usage:");
-				sender.sendMessage("/shop sell <Item|ID> <Amount> <Price> [confirm]");
+				sender.sendMessage(String.format("[%s] Syntax error.",
+						getDescription().getName()));
+				sender.sendMessage(String
+						.format("[%s] Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args.length > 4 && args[4].equalsIgnoreCase("confirm")) {
@@ -206,11 +212,19 @@ public final class TradingPost extends JavaPlugin {
 			}
 		} else if (args[0].equalsIgnoreCase("List")) {
 			if (args.length > 3) {
-				p.sendMessage("Sytax Error");
+				sender.sendMessage(String.format("[%s] Syntax error.",
+						getDescription().getName()));
+				sender.sendMessage(String
+						.format("[%s] Please type /shop list <amount|common|expensive|recent> [Item|ID]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args.length < 2) {
-				p.sendMessage("Sytax Error");
+				sender.sendMessage(String.format("[%s] Syntax error.",
+						getDescription().getName()));
+				sender.sendMessage(String
+						.format("[%s] Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args[1].equalsIgnoreCase("amount")) {
@@ -320,19 +334,19 @@ public final class TradingPost extends JavaPlugin {
 			// go for the next cheapest
 
 			if (args.length > 4) {
-				p.sendMessage(String.format("[%s] Correct Usage:",
+				p.sendMessage(String.format("[%s] Syntax error.",
 						getDescription().getName()));
-				p.sendMessage(String.format(
-						"[%s] /shop buy <Item|ID> <Amount> [confirm]",
-						getDescription().getName()));
+				p.sendMessage(String
+						.format("[%s] Please type /shop buy <Item|ID> <Amount> [confirm]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args.length < 3) {
-				p.sendMessage(String.format("[%s] Correct Usage:",
+				p.sendMessage(String.format("[%s] Syntax error.",
 						getDescription().getName()));
-				p.sendMessage(String.format(
-						"[%s] /shop buy <Item|ID> <Amount> [confirm]",
-						getDescription().getName()));
+				p.sendMessage(String
+						.format("[%s] Please type /shop buy <Item|ID> <Amount> [confirm]",
+								getDescription().getName()));
 				return false;
 			}
 			if (args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
@@ -426,25 +440,29 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 			}
-		} else if (args[0].equalsIgnoreCase("trasaction")
-				|| args[0].equalsIgnoreCase("trasactions")) {
-			boolean list = true;
+		} else if (args[0].equalsIgnoreCase("transaction")
+				|| args[0].equalsIgnoreCase("transactions")) {
+			boolean list = false;
+			if (args.length == 1) {
+				list = true;
+			}
 			if (args.length > 3) {
-				p.sendMessage(String.format("[%s] Correct Usage:",
+				p.sendMessage(String.format("[%s] Syntax error.",
 						getDescription().getName()));
-				p.sendMessage(String.format("[%s] /shop buy <Item|ID> "
-						+ "<Amount> [confirm]", getDescription().getName()));
+				p.sendMessage(String.format(
+						"Please type /shop transaction[s] <list|cancel> [ID]",
+						getDescription().getName()));
 				return false;
 			}
 			if (args.length < 1) {
-				p.sendMessage(String.format("[%s] Correct Usage:",
+				p.sendMessage(String.format("[%s] Syntax error.",
 						getDescription().getName()));
 				p.sendMessage(String.format(
-						"[%s] /shop buy <Item|ID> <Amount> " + "[confirm]",
+						"Please type /shop transaction[s] <list|cancel> [ID]",
 						getDescription().getName()));
 				return false;
 			}
-			if (args.length > 1 && args[1].equalsIgnoreCase("cancel")) {
+			if (args.length > 2 && args[1].equalsIgnoreCase("cancel")) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format(
 							"[%s]P = " + ((Player) sender).getDisplayName()
@@ -452,22 +470,36 @@ public final class TradingPost extends JavaPlugin {
 									+ data.getString(args[2] + ".Player"),
 							getDescription().getName()));
 				}
-				if (data.getString(args[2] + ".Player").equals(
-						((Player) sender).getDisplayName())
-						&& !data.getString(args[2] + ".Status").equals(
-								"Cancelled")) {
-					data.set(args[2] + ".Status", "Cancelled");
-					saveYamls();
-					ItemStack is = new ItemStack(
-							data.getInt(args[2] + ".Item"), data.getInt(args[2]
-									+ ".Amount"));
-					p.getInventory().addItem(is);
-					p.sendMessage(String.format("[%s] You have cancelled this "
-							+ "transaction.", getDescription().getName()));
-					return false;
-				} else {
-					p.sendMessage(String.format("[%s] You cannot cancel this "
-							+ "transaction.", getDescription().getName()));
+				try {
+					Integer.parseInt(args[2]);
+					if (data.getString(args[2] + ".Player").equals(
+							((Player) sender).getDisplayName())
+							&& data.getString(args[2] + ".Status").equals(
+									"Selling")) {
+						data.set(args[2] + ".Status", "Cancelled");
+						saveYamls();
+						ItemStack is = new ItemStack(data.getInt(args[2]
+								+ ".Item"), data.getInt(args[2] + ".Amount"));
+						p.getInventory().addItem(is);
+						p.sendMessage(String.format(
+								"[%s] You have cancelled transaction ID #"
+										+ args[2] + ".", getDescription()
+										.getName()));
+						return false;
+					} else {
+						p.sendMessage(String.format(
+								"[%s] You cannot cancel transaction ID #"
+										+ args[2] + ".", getDescription()
+										.getName()));
+						return false;
+					}
+				} catch (Exception e) {
+					p.sendMessage(String.format(
+							"[%s] Syntax error ID must be an integer. ",
+							getDescription().getName()));
+					p.sendMessage(String.format(
+							"[%s] /shop transaction[s] cancel <ID>",
+							getDescription().getName()));
 					return false;
 				}
 			} else if (args.length > 1 && args[1].equalsIgnoreCase("list")
@@ -504,6 +536,10 @@ public final class TradingPost extends JavaPlugin {
 					}
 					i--;
 				}
+			} else {
+				p.sendMessage(String.format(
+						"[%s] Syntax error. Please type /shop transaction[s].",
+						getDescription().getName()));
 			}
 			return true;
 		}
