@@ -136,7 +136,14 @@ public final class TradingPost extends JavaPlugin {
 		}
 		Player p = (Player) sender;
 		boolean confirm;
-
+		if (args.length < 1) {
+			sender.sendMessage(String.format("[%s] Syntax error.",
+					getDescription().getName()));
+			sender.sendMessage(String
+					.format("[%s] Please type /shop <sell|buy|list|transaction[s]>",
+							getDescription().getName()));
+			return false;
+		}
 		if (args[0].equalsIgnoreCase("Sell")) {
 			if (args.length > 5) {
 				sender.sendMessage(String.format("[%s] Syntax error.",
