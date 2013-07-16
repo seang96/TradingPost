@@ -349,7 +349,7 @@ public final class TradingPost extends JavaPlugin {
 		}
 		else if(args[0].equalsIgnoreCase("trasaction") || args[0].equalsIgnoreCase("trasactions")) {
 			boolean list = true;
-			if(args.length > 2) {
+			if(args.length > 3) {
 				p.sendMessage(String.format("[%s] Correct Usage:", getDescription().getName()));
 				p.sendMessage(String.format("[%s] /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
@@ -360,23 +360,32 @@ public final class TradingPost extends JavaPlugin {
 				return false;
 			}
 			if(args.length > 1 && args[1].equalsIgnoreCase("cancel")) {
-				if (data.getString(args[2] + ".Player").equals(p)) {
+				if (config.getBoolean("Debug")) {
+					log.info(String.format("[%s]P = " + ((Player)sender).getDisplayName() + " LP = " + data.getString(args[2] + ".Player"), getDescription().getName()));
+				}
+				if(data.getString(args[2] + ".Player").equals(((Player)sender).getDisplayName()) && !data.getString(args[2] + ".Status").equals("Cancelled")) {
 					data.set(args[2] + ".Status", "Cancelled");
+					saveYamls();
 					ItemStack is = new ItemStack (data.getInt(args[2] + ".Item"), data.getInt(args[2] + ".Amount"));
 					p.getInventory().addItem(is);
+					p.sendMessage(String.format("[%s] You have cancelled this transaction.", getDescription().getName()));
+					return false;
 				}
 				else {
-					p.sendMessage(String.format("[%s] You do not own that transaction.", getDescription().getName()));
+					p.sendMessage(String.format("[%s] You cannot cancel this transaction.", getDescription().getName()));
+					return false;
 				}
 			}
 			else if(args.length > 1 && args[1].equalsIgnoreCase("list") || list == true) {
 				int i = data.getInt("Total");
 				int printed_items = 0;
+				p.sendMessage(String.format("[%s] ID Item Amount Price/Unit Total Price Status", getDescription().getName()));
 				while(i>0 && printed_items <10){
-					p.sendMessage(String.format("[%s] ID Item Amount Price/Unit Total Price", getDescription().getName()));
-					if(data.getString(i + ".Player").equals(p))
-					{
-						p.sendMessage(String.format("[%s] " + i + " " + Material.getMaterial(data.getInt(i + ".Item")) + " " + data.getInt(i + ".TotalAmount") + " " + data.getInt(i + ".Price") + " " + data.getInt(i + ".Price") * data.getInt(i + ".TotalAmount"), getDescription().getName()));
+					if (config.getBoolean("Debug")) {
+						log.info(String.format("[%s]P = " + ((Player)sender).getDisplayName() + " LP = " + data.getString(i + ".Player") + " S = " + data.getString(i + ".Status"), getDescription().getName()));
+					}
+					if(data.getString(i + ".Player").equals(((Player)sender).getDisplayName()))	{
+						p.sendMessage(String.format("[%s] " + i + " " + Material.getMaterial(data.getInt(i + ".Item")) + " " + data.getInt(i + ".TotalAmount") + " " + data.getInt(i + ".Price") + " " + data.getInt(i + ".Price") * data.getInt(i + ".TotalAmount") + " " + data.getString(i + ".Status"), getDescription().getName()));
 						printed_items++;
 					}
 					i--;
