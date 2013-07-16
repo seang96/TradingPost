@@ -161,35 +161,36 @@ public final class TradingPost extends JavaPlugin {
 					EconomyResponse r = econ.withdrawPlayer(p.getName(), tax);
 					if(r.transactionSuccess()) {
 						IDcount++;
-						p.sendMessage("You have added " + args[2] + " " + args[1] + " for " + args[3] + " to the market. You have paid " + String.valueOf(tax) + " for taxes." );
+						p.sendMessage(String.format("[%s] You have added " + args[2] + " " + args[1] + " for " + args[3] + " to the market. You have paid " + String.valueOf(tax) + " for taxes.", getDescription().getName()));
 						loadYamls();
 						data.set("Total", IDcount);
 						data.set(IDcount + ".Player", ((Player)sender).getDisplayName());
 						data.set(IDcount + ".Item", id);
+						data.set(IDcount + ".TotalAmount", amount);
 						data.set(IDcount + ".Amount", amount);
 						data.set(IDcount + ".Price", price);
 						data.set(IDcount + ".Status", "Selling");
 						data.set(IDcount + ".Check", "T");
 						saveYamls();
 					} else {
-						sender.sendMessage(String.format("An error occured: %s", r.errorMessage));
+						p.sendMessage(String.format("[%s] An error occured: %s", getDescription().getName(), r.errorMessage));
 					}
 				}
 			}
 			else {
 				if (config.getBoolean("Debug")) {
-					log.info(String.format("t = " + t1));
+					log.info(String.format("[%s] t = " + t1, getDescription().getName()));
 				}
-				sender.sendMessage("You will sell " + args[2] + " " + args[1] + ". The total price will be " + String.valueOf(totalprice) + ". With the cost of " + String.valueOf(tax) + " for taxes.");
+				p.sendMessage(String.format("[%s] You will sell " + args[2] + " " + args[1] + ". The total price will be " + String.valueOf(totalprice) + ". With the cost of " + String.valueOf(tax) + " for taxes.", getDescription().getName()));
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
 			if(args.length > 3) {
-				sender.sendMessage(String.format("Sytax Error"));
+				p.sendMessage("Sytax Error");
 				return false;
 			}
 			if(args.length < 2) {
-				sender.sendMessage(String.format("Sytax Error"));
+				p.sendMessage("Sytax Error");
 				return false;
 			}
 			if(args[1].equalsIgnoreCase("amount")) {
@@ -200,20 +201,20 @@ public final class TradingPost extends JavaPlugin {
 						if(data.getInt(i + ".Item") == mat.getId() && data.getString(i + ".Status").equals("Selling")) {
 							amount += data.getInt(i + ".Amount");
 							if(config.getBoolean("Debug")) {
-								log.info(String.format("A = " + amount));
+								log.info(String.format("[%s] A = " + amount, getDescription().getName()));
 							}
 						}
 					}
 					if(amount == 1) {
-						sender.sendMessage(String.format("There is only " + amount + " " + args[2] + " left."));
+						p.sendMessage(String.format("[%s] There is only " + amount + " " + args[2] + " left.", getDescription().getName()));
 					} else if(amount == 0) {
-						sender.sendMessage(String.format("There is no " + args[2] + " on the market."));
+						p.sendMessage(String.format("[%s] There is no " + args[2] + " on the market.", getDescription().getName()));
 					} else {
-						sender.sendMessage(String.format("There are " + amount + " " + args[2] + " left."));
+						p.sendMessage(String.format("[%s] There are " + amount + " " + args[2] + " left.", getDescription().getName()));
 					}
 				}
 				else {
-					sender.sendMessage(String.format("Please specify an item. /shop list amount <Item|ID>"));
+					p.sendMessage(String.format("[%s] Please specify an item. /shop list amount <Item|ID>", getDescription().getName()));
 				}
 			}
 			if(args[1].equalsIgnoreCase("common")) {
@@ -224,7 +225,7 @@ public final class TradingPost extends JavaPlugin {
 				while(i>0 && printed_items <10){
 					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Amount") < amount || amount < 0)) {
 						amount = data.getInt(i + ".Amount");
-						sender.sendMessage(String.format("A(n) total amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added to the list."));
+						p.sendMessage(String.format("[%s] A(n) total amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added to the list.", getDescription().getName()));
 						printed_items++;
 					}
 					i--;
@@ -238,7 +239,7 @@ public final class TradingPost extends JavaPlugin {
 				while(i>0 && printed_items <10){
 					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Price") < price || price < 0)) {
 						price = data.getInt(i + ".Price");
-						sender.sendMessage(String.format("A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + "."));
+						p.sendMessage(String.format("[%s] A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + ".", getDescription().getName()));
 						printed_items++;
 					}
 					i--;
@@ -249,9 +250,8 @@ public final class TradingPost extends JavaPlugin {
 				int i = data.getInt("Total");
 				int printed_items = 0;
 				while(i>0 && printed_items <10){
-					if(data.getString(i + ".Status").equals("Selling"))
-					{
-						sender.sendMessage(String.format("A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + "."));
+					if(data.getString(i + ".Status").equals("Selling")) {
+						p.sendMessage(String.format("[%s] A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + ".", getDescription().getName()));
 						printed_items++;
 					}
 					i--;
@@ -262,13 +262,13 @@ public final class TradingPost extends JavaPlugin {
 			//Find cheapest price of item, buy that first until it is empty, delete lines in yml if empty, and if buyer has more amount then go for the next cheapest
 			
 			if(args.length > 4) {
-				sender.sendMessage("Correct Usage:");
-				sender.sendMessage("/shop buy <Item|ID> <Amount> [confirm]");
+				p.sendMessage(String.format("[%s] Correct Usage:", getDescription().getName()));
+				p.sendMessage(String.format("[%s] /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if(args.length < 3) {
-				sender.sendMessage("Correct Usage:");
-				sender.sendMessage("/shop buy <Item|ID> <Amount> [confirm]");
+				p.sendMessage(String.format("[%s] Correct Usage:", getDescription().getName()));
+				p.sendMessage(String.format("[%s] /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if(args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
@@ -285,11 +285,10 @@ public final class TradingPost extends JavaPlugin {
 			int currentamount = 0;
 			int j = 0;
 			int i = 0;
-			int k = 0;
 			int lowestPrice;
 			while(amount > 0) {
 				if (config.getBoolean("Debug")) {
-					log.info(String.format("New Loop"));
+					log.info(String.format("[%s] New Loop", getDescription().getName()));
 				}
 				lowestPrice = -1;
 				for(i = 1; i <= data.getInt("Total"); i++) {
@@ -301,11 +300,11 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 				if(lowestPrice < 0) {
-					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
+					p.sendMessage(String.format("[%s] There is not enough " + mat + " on sale.", getDescription().getName()));
 					return false;
 				}
 				if (config.getBoolean("Debug")) {
-					getLogger().info("J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player"));
+					log.info(String.format("[%s] J= " + String.valueOf(j) + " Name: " + data.getString(j + ".Player", getDescription().getName())));
 				}
 				int buyamount = (data.getInt(j + ".Amount") < amount) ? data.getInt(j + ".Amount") : amount;
 				int price = data.getInt(j + ".Price") * buyamount;
@@ -328,23 +327,59 @@ public final class TradingPost extends JavaPlugin {
 			}
 			if(confirm) {
 				if (config.getBoolean("Debug")) {
-					log.info(String.format(args[3]));
+					log.info(String.format("[%s] " + args[3], getDescription().getName()));
 				}
 				EconomyResponse r = econ.withdrawPlayer(p.getName(), totalprice);
 				if(r.transactionSuccess()) {
 					ItemStack is = new ItemStack (mat, currentamount);
 					p.getInventory().addItem(is);
-					sender.sendMessage(String.format("You have bought " + currentamount + " of " + mat + " for " + totalprice + "."));
+					p.sendMessage(String.format("[%s] You have bought " + currentamount + " of " + mat + " for " + totalprice + ".", getDescription().getName()));
 				}
 			}
 			else {
-				sender.sendMessage(String.format("You will pay " + totalprice + " for " + currentamount + " of " + mat + "."));
-				for(k = 1; k <= data.getInt("Total"); k++) {
-					if((data.getString(k + ".Check").equals("F"))) {
+				p.sendMessage(String.format("[%s] You will pay " + totalprice + " for " + currentamount + " of " + mat + ".", getDescription().getName()));
+				for(i = 1; i <= data.getInt("Total"); i++) {
+					if((data.getString(i + ".Check").equals("F"))) {
 						loadYamls();
-						data.set(k + ".Check", "T");
+						data.set(i + ".Check", "T");
 						saveYamls();
 					}
+				}
+			}
+		}
+		else if(args[0].equalsIgnoreCase("trasaction") || args[0].equalsIgnoreCase("trasactions")) {
+			boolean list = true;
+			if(args.length > 2) {
+				p.sendMessage(String.format("[%s] Correct Usage:", getDescription().getName()));
+				p.sendMessage(String.format("[%s] /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
+				return false;
+			}
+			if(args.length < 1) {
+				p.sendMessage(String.format("[%s] Correct Usage:", getDescription().getName()));
+				p.sendMessage(String.format("[%s] /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
+				return false;
+			}
+			if(args.length > 1 && args[1].equalsIgnoreCase("cancel")) {
+				if (data.getString(args[2] + ".Player").equals(p)) {
+					data.set(args[2] + ".Status", "Cancelled");
+					ItemStack is = new ItemStack (data.getInt(args[2] + ".Item"), data.getInt(args[2] + ".Amount"));
+					p.getInventory().addItem(is);
+				}
+				else {
+					p.sendMessage(String.format("[%s] You do not own that transaction.", getDescription().getName()));
+				}
+			}
+			else if(args.length > 1 && args[1].equalsIgnoreCase("list") || list == true) {
+				int i = data.getInt("Total");
+				int printed_items = 0;
+				while(i>0 && printed_items <10){
+					p.sendMessage(String.format("[%s] ID Item Amount Price/Unit Total Price", getDescription().getName()));
+					if(data.getString(i + ".Player").equals(p))
+					{
+						p.sendMessage(String.format("[%s] " + i + " " + Material.getMaterial(data.getInt(i + ".Item")) + " " + data.getInt(i + ".TotalAmount") + " " + data.getInt(i + ".Price") + " " + data.getInt(i + ".Price") * data.getInt(i + ".TotalAmount"), getDescription().getName()));
+						printed_items++;
+					}
+					i--;
 				}
 			}
 			return true;
