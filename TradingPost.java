@@ -184,6 +184,7 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
+			boolean founditem;
 			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
@@ -213,15 +214,40 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 				else {
-					sender.sendMessage(String.format("Please specify an item."));
+					sender.sendMessage(String.format("Please specify an item. /shop list amount <Item|ID>"));
 				}
 			}
 			if(args[1].equalsIgnoreCase("common")) {
 				//Most amount of items in ID, displays the top 10
+				int i = data.getInt("Total");
+				int printed_items = 0;
+				int amount = -1;
+				while(i>0 && printed_items <10){
+					founditem = false;
+					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Amount") < amount || founditem == false)) {
+						founditem = true;
+						amount = data.getInt(i + ".Amount");
+						sender.sendMessage(String.format("A(n) total amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added to the list."));
+						printed_items++;
+					}
+					i--;
 				}
+			}
 			if(args[1].equalsIgnoreCase("expensive")) {
 				//Most expensive items on the market by ID, displays top 10, (also checks the cheapest of that item ID to be the most expensive)
-
+				int i = data.getInt("Total");
+				int printed_items = 0;
+				int price = -1;
+				while(i>0 && printed_items <10){
+					founditem = false;
+					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Price") < price || founditem == false)) {
+						founditem = true;
+						price = data.getInt(i + ".Price");
+						sender.sendMessage(String.format("A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + "."));
+						printed_items++;
+					}
+					i--;
+				}
 			}
 			if(args[1].equalsIgnoreCase("recent")) {
 				//Most recent items added to being sold
@@ -273,13 +299,13 @@ public final class TradingPost extends JavaPlugin {
 				lowestPrice = -1;
 				for(i = 1; i <= data.getInt("Total"); i++) {
 					if((data.getInt(i + ".Item") == id) && (data.getString(i + ".Status").equals("Selling")) && (data.getString(i + ".Check").equals("T"))) {
-						if(lowestprice < 0 || data.getInt(i + ".Price") < lowestPrice) {
+						if(lowestPrice < 0 || data.getInt(i + ".Price") < lowestPrice) {
 							lowestPrice = data.getInt(i + ".Price");
 							j= i;
 						}
 					}
 				}
-				if(lowestprice < 0) {
+				if(lowestPrice < 0) {
 					sender.sendMessage(String.format("There is not enough " + mat + " on sale."));
 					return false;
 				}
