@@ -184,7 +184,6 @@ public final class TradingPost extends JavaPlugin {
 			}
 		}
 		else if(args[0].equalsIgnoreCase("List")) {
-			boolean founditem;
 			if(args.length > 3) {
 				sender.sendMessage(String.format("Sytax Error"));
 				return false;
@@ -223,9 +222,7 @@ public final class TradingPost extends JavaPlugin {
 				int printed_items = 0;
 				int amount = -1;
 				while(i>0 && printed_items <10){
-					founditem = false;
-					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Amount") < amount || founditem == false)) {
-						founditem = true;
+					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Amount") < amount || amount < 0)) {
 						amount = data.getInt(i + ".Amount");
 						sender.sendMessage(String.format("A(n) total amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added to the list."));
 						printed_items++;
@@ -239,9 +236,7 @@ public final class TradingPost extends JavaPlugin {
 				int printed_items = 0;
 				int price = -1;
 				while(i>0 && printed_items <10){
-					founditem = false;
-					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Price") < price || founditem == false)) {
-						founditem = true;
+					if(data.getString(i + ".Status").equals("Selling") && (data.getInt(i + ".Price") < price || price < 0)) {
 						price = data.getInt(i + ".Price");
 						sender.sendMessage(String.format("A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + "."));
 						printed_items++;
