@@ -5,9 +5,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -28,23 +30,23 @@ public final class TradingPost extends JavaPlugin {
 	public static Permission perms = null;
 	File configFile;
 	File dataFile;
+	File usersFile;
 	FileConfiguration config;
 	FileConfiguration data;
+	FileConfiguration users;
 
 	@Override
 	public void onEnable() {
 		configFile = new File(getDataFolder(), "config.yml");
 		dataFile = new File(getDataFolder(), "data.yml");
+		usersFile = new File(getDataFolder(), "users.yml");
 		try {
 			firstRun();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		if (!setupEconomy()) {
-			log.severe(String.format("[" + ChatColor.DARK_AQUA + "%s"
-					+ ChatColor.RESET + "] " + ChatColor.RED
-					+ "- Disabled due to no Vault dependency found!",
-					getDescription().getName()));
+			log.severe(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "- Disabled due to no Vault dependency found!", getDescription().getName()));
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		} else {
@@ -54,6 +56,7 @@ public final class TradingPost extends JavaPlugin {
 		setupPermissions();
 		config = new YamlConfiguration();
 		data = new YamlConfiguration();
+		users = new YamlConfiguration();
 		loadYamls();
 		if (config.getBoolean("Debug", true)) {
 			log.info(String.format("[%s] You are in debug mode!",
@@ -72,6 +75,7 @@ public final class TradingPost extends JavaPlugin {
 		try {
 			config.save(configFile);
 			data.save(dataFile);
+			users.save(usersFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -81,6 +85,7 @@ public final class TradingPost extends JavaPlugin {
 		try {
 			config.load(configFile);
 			data.load(dataFile);
+			users.save(usersFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -94,6 +99,10 @@ public final class TradingPost extends JavaPlugin {
 		if (!dataFile.exists()) {
 			dataFile.getParentFile().mkdirs();
 			copy(getResource("data.yml"), dataFile);
+		}
+		if (!usersFile.exists()) {
+			usersFile.getParentFile().mkdirs();
+			copy(getResource("users.yml"), usersFile);
 		}
 	}
 
@@ -140,59 +149,43 @@ public final class TradingPost extends JavaPlugin {
 		Player p = (Player) sender;
 		boolean confirm;
 		if (args.length < 1) {
-			sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-					+ ChatColor.RESET + "] " + ChatColor.RED
-					+ "Please type /shop <sell|buy|list|transaction[s]>",
-					getDescription().getName()));
+			sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop <sell|buy|list|transaction[s]|setting[s]>", getDescription().getName()));
 			return false;
 		}
 		if (args[0].equalsIgnoreCase("Sell")) {
 			if (args.length == 1) {
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 5) {
-				sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-						+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length < 4) {
-				sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-						+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 4 && args[4].equalsIgnoreCase("confirm")) {
 				confirm = true;
 			} else {
 				confirm = false;
+				if (args.length >= 5) {
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Error: Please enter a valid item name. If you used a space try replacing with _ (underscore).", getDescription().getName()));
+					return false;
+				}
+			}
+			if (config.getBoolean("AutoConfirm")) {
+				if (!users.getBoolean(((Player) sender).getDisplayName()
+						+ ".Confirm")) {
+					confirm = true;
+				}
+			} else {
+				if (users.getBoolean(((Player) sender).getDisplayName()
+						+ ".Confirm")) {
+					confirm = true;
+				}
 			}
 			long IDcount = data.getInt("Total");
 			int amount = Integer.parseInt(args[2]);
@@ -202,7 +195,7 @@ public final class TradingPost extends JavaPlugin {
 			double t1 = t / 100;
 			double tax = price * amount * t1;
 			tax = (double) ((int) ((tax + 0.005) * 100) % Integer.MAX_VALUE) / 100;
-			Material mat = Material.matchMaterial(args[1].trim().replace(" ","_"));
+			Material mat = Material.matchMaterial(args[1]);
 			if (Material.matchMaterial(args[1]) != null) {
 				int id = mat.getId();
 				ItemStack is = new ItemStack(mat, amount);
@@ -213,102 +206,49 @@ public final class TradingPost extends JavaPlugin {
 								tax);
 						if (r.transactionSuccess()) {
 							IDcount++;
-							p.sendMessage(String.format(
-									"[" + ChatColor.DARK_AQUA + "%s"
-											+ ChatColor.RESET + "] "
-											+ ChatColor.RED + "You have added "
-											+ args[2] + " " + args[1] + " for "
-											+ args[3] + " to the "
-											+ "market. You have paid "
-											+ String.valueOf(tax)
-											+ " for taxes.", getDescription()
-											.getName()));
-								loadYamls();
-								data.set("Total", IDcount);
-								data.set(IDcount + ".Player",
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have added " + args[2] + " " + args[1] + " for " + args[3] + " to the " + "market. You have paid " + String.valueOf(tax) + " for taxes.", getDescription() .getName()));
+							loadYamls();
+							data.set("Total", IDcount);
+							data.set(IDcount + ".Player",
 									((Player) sender).getDisplayName());
-								data.set(IDcount + ".Item", id);
-								data.set(IDcount + ".TotalAmount", amount);
-								data.set(IDcount + ".Amount", amount);
-								data.set(IDcount + ".Price", price);
-								data.set(IDcount + ".Status", "Selling");
-								data.set(IDcount + ".Check", "T");
-								saveYamls();
-							} else {
-								p.sendMessage(String.format("["
-										+ ChatColor.DARK_AQUA + "%s"
-										+ ChatColor.RESET + "] " + ChatColor.RED
-										+ "An error occured: %s", getDescription()
-										.getName(), r.errorMessage));
-							}
+							data.set(IDcount + ".Item", id);
+							data.set(IDcount + ".TotalAmount", amount);
+							data.set(IDcount + ".Amount", amount);
+							data.set(IDcount + ".Price", price);
+							data.set(IDcount + ".Status", "Selling");
+							data.set(IDcount + ".Check", "T");
+							saveYamls();
+						} else {
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "An error occured: %s", getDescription() .getName(), r.errorMessage));
 						}
-					} else {
-						if (config.getBoolean("Debug")) {
-							log.info(String.format(" t = " + t1, getDescription()
-									.getName()));
-						}
-						p.sendMessage(String.format(
-								"[" + ChatColor.DARK_AQUA + "%s" + ChatColor.RESET
-								+ "] " + ChatColor.RED + "You will sell "
-								+ args[2] + " " + args[1]
-										+ ". The total price will be "
-										+ String.valueOf(totalprice)
-										+ ". With the cost of "
-										+ String.valueOf(tax) + " for taxes.",
-										getDescription().getName()));
+					}
+					else {
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You do not have " + args[3] + " " + args[2] + " please try selling at a lower amount.", getDescription() .getName()));
+					}
+				} 
+					else {
+					if (config.getBoolean("Debug")) {
+						log.info(String.format(" t = " + t1, getDescription()
+								.getName()));
+					}
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You will sell " + args[2] + " " + args[1] + ". The total price will be " + String.valueOf(totalprice) + ". With the cost of " + String.valueOf(tax) + " for taxes.", getDescription().getName()));
 				}
 			} else {
-				p.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Error: Please enter a valid item name. If you used a space try replacing with _ (underscore).",
-								getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Error: Please enter a valid item name. If you used a space try replacing with _ (underscore).", getDescription().getName()));
 			}
 		} else if (args[0].equalsIgnoreCase("List")) {
 			if (args.length == 1) {
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop list <amount|common|expensive|recent> [Item|ID]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 3) {
-				sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-						+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop list <amount|common|expensive|recent> [Item|ID]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
 				return false;
 			}
 			if (args.length < 2) {
-				sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-						+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String
-						.format("["
-								+ ChatColor.DARK_AQUA
-								+ "%s"
-								+ ChatColor.RESET
-								+ "] "
-								+ ChatColor.RED
-								+ "Please type /shop list <amount|common|expensive|recent> [Item|ID]",
-								getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
 				return false;
 			}
 			if (args[1].equalsIgnoreCase("amount")) {
@@ -327,31 +267,14 @@ public final class TradingPost extends JavaPlugin {
 						}
 					}
 					if (amount == 1) {
-						p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-								+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-								+ "There is only " + amount + " " + args[2]
-								+ " left.", getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There is only " + amount + " " + args[2] + " left.", getDescription().getName()));
 					} else if (amount == 0) {
-						p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-								+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-								+ "There is no " + args[2] + " on the market.",
-								getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There is no " + args[2] + " on the market.", getDescription().getName()));
 					} else {
-						p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-								+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-								+ "There are " + amount + " " + args[2]
-								+ " left.", getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There are " + amount + " " + args[2] + " left.", getDescription().getName()));
 					}
 				} else {
-					p.sendMessage(String
-							.format("["
-									+ ChatColor.DARK_AQUA
-									+ "%s"
-									+ ChatColor.RESET
-									+ "] "
-									+ ChatColor.RED
-									+ "Please specify an item. /shop list amount <Item|ID>",
-									getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please specify an item. /shop list amount <Item|ID>", getDescription().getName()));
 				}
 			}
 			if (args[1].equalsIgnoreCase("common")) {
@@ -359,24 +282,20 @@ public final class TradingPost extends JavaPlugin {
 				int i = data.getInt("Total");
 				int printed_items = 0;
 				int amount = -1;
+				int id = -1;
 				while (i > 0 && printed_items < 10) {
 					if (data.getString(i + ".Status").equals("Selling")
 							&& (data.getInt(i + ".Amount") < amount || amount < 0)) {
-						amount = data.getInt(i + ".Amount");
-						p.sendMessage(String.format(
-								"["
-										+ ChatColor.DARK_AQUA
-										+ "%s"
-										+ ChatColor.RESET
-										+ "] "
-										+ ChatColor.RED
-										+ "A(n) total amount of "
-										+ data.getInt(i + ".Amount")
-										+ " "
-										+ Material.getMaterial(data.getInt(i
-												+ ".Item"))
-										+ " has been added to the list.",
-								getDescription().getName()));
+						id = data.getInt(i + ".Item");
+						for (int j = 1; j <= data.getInt("Total"); j++) {
+							if (id == data.getInt(i + ".Item")) {
+								amount += data.getInt(j + ".Amount");
+							}
+							else {
+								amount = data.getInt(i + ".Amount");
+							}
+						}
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) total amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added to the list.", getDescription().getName()));
 						printed_items++;
 					}
 					i--;
@@ -393,20 +312,7 @@ public final class TradingPost extends JavaPlugin {
 					if (data.getString(i + ".Status").equals("Selling")
 							&& (data.getInt(i + ".Price") < price || price < 0)) {
 						price = data.getInt(i + ".Price");
-						p.sendMessage(String.format(
-								"["
-										+ ChatColor.DARK_AQUA
-										+ "%s"
-										+ ChatColor.RESET
-										+ "] "
-										+ ChatColor.RED
-										+ "A(n) amount of "
-										+ data.getInt(i + ".Amount")
-										+ " "
-										+ Material.getMaterial(data.getInt(i
-												+ ".Item"))
-										+ " has been added for "
-										+ data.getInt(i + ".Price") + ".",
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + ".",
 								getDescription().getName()));
 						printed_items++;
 					}
@@ -419,21 +325,7 @@ public final class TradingPost extends JavaPlugin {
 				int printed_items = 0;
 				while (i > 0 && printed_items < 10) {
 					if (data.getString(i + ".Status").equals("Selling")) {
-						p.sendMessage(String.format(
-								"["
-										+ ChatColor.DARK_AQUA
-										+ "%s"
-										+ ChatColor.RESET
-										+ "] "
-										+ ChatColor.RED
-										+ "A(n) amount of "
-										+ data.getInt(i + ".Amount")
-										+ " "
-										+ Material.getMaterial(data.getInt(i
-												+ ".Item"))
-										+ " has been added for "
-										+ data.getInt(i + ".Price") + ".",
-								getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) amount of " + data.getInt(i + ".Amount") + " " + Material.getMaterial(data.getInt(i + ".Item")) + " has been added for " + data.getInt(i + ".Price") + ".", getDescription().getName()));
 						printed_items++;
 					}
 					i--;
@@ -444,30 +336,17 @@ public final class TradingPost extends JavaPlugin {
 			// delete lines in yml if empty, and if buyer has more amount then
 			// go for the next cheapest
 			if (args.length == 1) {
-				sender.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-						+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-						+ "Please type /shop buy <Item|ID> <Amount> [confirm]",
-						getDescription().getName()));
+				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 4) {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Please type /shop buy <Item|ID> <Amount> [confirm]",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length < 3) {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Please type /shop buy <Item|ID> <Amount> [confirm]",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 3 && args[3].equalsIgnoreCase("confirm")) {
@@ -475,7 +354,10 @@ public final class TradingPost extends JavaPlugin {
 			} else {
 				confirm = false;
 			}
-
+			if (users.getBoolean(((Player) sender).getDisplayName()
+					+ ".Confirm")) {
+				confirm = true;
+			}
 			Material mat = Material.matchMaterial(args[1]);
 			int id = mat.getId();
 			int amount = Integer.parseInt(args[2]);
@@ -502,10 +384,7 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 				if (lowestPrice < 0) {
-					p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-							+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-							+ "There is not enough " + mat + " on sale.",
-							getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There is not enough " + mat + " on sale.", getDescription().getName()));
 					return false;
 				}
 				if (config.getBoolean("Debug")) {
@@ -526,7 +405,7 @@ public final class TradingPost extends JavaPlugin {
 							data.getString(j + ".Player"), price);
 					if (r1.transactionSuccess()) {
 						data.set(j + ".Amount",
-								(data.getInt(j + ".Amount") - buyamount));
+						(data.getInt(j + ".Amount") - buyamount));
 						if (data.getInt(j + ".Amount") == 0) {
 							data.set(j + ".Status", "Sold");
 						}
@@ -538,27 +417,22 @@ public final class TradingPost extends JavaPlugin {
 				}
 			}
 			if (confirm) {
-				if (config.getBoolean("Debug")) {
-					log.info(String.format(" " + args[3], getDescription()
-							.getName()));
-				}
 				EconomyResponse r = econ
 						.withdrawPlayer(p.getName(), totalprice);
 				if (r.transactionSuccess()) {
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have bought " + currentamount + " of " + mat + " for " + totalprice + ".", getDescription() .getName()));
 					ItemStack is = new ItemStack(mat, currentamount);
-					p.getInventory().addItem(is);
-					p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-							+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-							+ "You have bought " + currentamount + " of " + mat
-							+ " for " + totalprice + ".", getDescription()
-							.getName()));
+					HashMap<Integer, ItemStack> leftOver = new HashMap<Integer, ItemStack>();
+                    leftOver.putAll((p.getInventory().addItem(is)));
+                    if (!leftOver.isEmpty()) {
+                        Location loc = p.getLocation();
+                        p.getWorld().dropItem(loc, new ItemStack(Material.getMaterial(leftOver.get(0).getTypeId()), leftOver.get(0).getAmount()));
+                        p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Your inventory is full. Rest of the items have been dropped.", getDescription().getName()));
+                    }
+
 				}
 			} else {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "You will pay " + totalprice + " for "
-						+ currentamount + " of " + mat + ".", getDescription()
-						.getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You will pay " + totalprice + " for " + currentamount + " of " + mat + ".", getDescription() .getName()));
 				for (i = 1; i <= data.getInt("Total"); i++) {
 					if ((data.getString(i + ".Check").equals("F"))) {
 						loadYamls();
@@ -574,21 +448,13 @@ public final class TradingPost extends JavaPlugin {
 				list = true;
 			}
 			if (args.length > 3) {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format(
-						"Please type /shop transaction[s] <list|cancel> [ID]",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("Please type /shop transaction[s] <list|cancel> [ID]", getDescription().getName()));
 				return false;
 			}
 			if (args.length < 1) {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format(
-						"Please type /shop transaction[s] <list|cancel> [ID]",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("Please type /shop transaction[s] <list|cancel> [ID]", getDescription().getName()));
 				return false;
 			}
 			if (args.length > 2 && args[1].equalsIgnoreCase("cancel")) {
@@ -610,37 +476,22 @@ public final class TradingPost extends JavaPlugin {
 						ItemStack is = new ItemStack(data.getInt(args[2]
 								+ ".Item"), data.getInt(args[2] + ".Amount"));
 						p.getInventory().addItem(is);
-						p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-								+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-								+ "You have cancelled transaction ID #"
-								+ args[2] + ".", getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have cancelled transaction ID #" + args[2] + ".", getDescription().getName()));
 						return false;
 					} else {
-						p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-								+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-								+ "You cannot cancel transaction ID #"
-								+ args[2] + ".", getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You cannot cancel transaction ID #" + args[2] + ".", getDescription().getName()));
 						return false;
 					}
 				} catch (Exception e) {
-					p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-							+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-							+ "Syntax error ID must be an integer. ",
-							getDescription().getName()));
-					p.sendMessage(String.format("[" + ChatColor.DARK_AQUA
-							+ "%s" + ChatColor.RESET + "] " + ChatColor.RED
-							+ "/shop transaction[s] cancel <ID>",
-							getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error ID must be an integer. ", getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "/shop transaction[s] cancel <ID>", getDescription().getName()));
 					return false;
 				}
 			} else if (args.length > 1 && args[1].equalsIgnoreCase("list")
 					|| list == true) {
 				int i = data.getInt("Total");
 				int printed_items = 0;
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "ID Item Amount Price/Unit " + "Total Price Status",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "ID " + ChatColor.AQUA + "Item " + ChatColor.GREEN + "Amount " + ChatColor.DARK_PURPLE + "Price/Unit " + ChatColor.DARK_AQUA + "Total Price " + ChatColor.RED + "Status", getDescription().getName()));
 				while (i > 0 && printed_items < 10) {
 					if (config.getBoolean("Debug")) {
 						log.info(String.format(
@@ -653,33 +504,76 @@ public final class TradingPost extends JavaPlugin {
 					}
 					if (data.getString(i + ".Player").equals(
 							((Player) sender).getDisplayName())) {
-						p.sendMessage(String.format(
-								"["
-										+ ChatColor.DARK_AQUA
-										+ "%s"
-										+ ChatColor.RESET
-										+ "] "
-										+ ChatColor.RED
-										+ ""
-										+ i
-										+ " "
-										+ Material.getMaterial(data.getInt(i
-												+ ".Item")) + " "
-										+ data.getInt(i + ".TotalAmount") + " "
-										+ data.getInt(i + ".Price") + " "
-										+ data.getInt(i + ".Price")
-										* data.getInt(i + ".TotalAmount") + " "
-										+ data.getString(i + ".Status"),
-								getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + i + " " + ChatColor.AQUA + Material.getMaterial(data.getInt(i + ".Item")) + " " + ChatColor.GREEN + data.getInt(i + ".TotalAmount") + " " + ChatColor.DARK_PURPLE + data.getInt(i + ".Price") + " " + ChatColor.DARK_AQUA + data.getInt(i + ".Price") * data.getInt(i + ".TotalAmount") + " " + ChatColor.RED +data.getString(i + ".Status"), getDescription().getName()));
 						printed_items++;
 					}
 					i--;
 				}
 			} else {
-				p.sendMessage(String.format("[" + ChatColor.DARK_AQUA + "%s"
-						+ ChatColor.RESET + "] " + ChatColor.RED
-						+ "Syntax error. Please type /shop transaction[s].",
-						getDescription().getName()));
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error. Please type /shop transaction[s].", getDescription().getName()));
+			}
+		} else if (args[0].equalsIgnoreCase("setting")
+				|| args[0].equalsIgnoreCase("settings")) {
+			if (args.length > 3) {
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("Please type /shop setting[s] <autoconfirm> [true|false]", getDescription().getName()));
+				return false;
+			}
+			if (args.length < 1) {
+				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
+				p.sendMessage(String.format("Please type /shop setting[s] <autoconfirm> [true|false]", getDescription().getName()));
+				return false;
+			}
+			if (args[1].equalsIgnoreCase("autoconfirm")) {
+				boolean toggle = false;
+				if (args.length == 2) {
+					toggle = true;
+					if (toggle) {
+						if (users.getBoolean(((Player) sender).getDisplayName()
+								+ ".Confirm")) {
+							users.set(((Player) sender).getDisplayName()
+									+ ".Confirm", null);
+							saveYamls();
+							if (config.getBoolean("AutoConfirm")) {
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been enabled.", getDescription().getName()));
+							} else {
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been disabled.", getDescription().getName()));
+							}
+						} else {
+							users.set(((Player) sender).getDisplayName()
+									+ ".Confirm", true);
+							saveYamls();
+							if (config.getBoolean("AutoConfirm")) {
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been disabled.", getDescription().getName()));
+							} else {
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been enabled.", getDescription().getName()));
+							}
+						}
+					}
+				}
+				if (args.length == 3) {
+					if (args[2].equalsIgnoreCase("true")
+							|| args[2].equalsIgnoreCase("enable")) {
+						users.set(((Player) sender).getDisplayName()
+								+ ".Confirm", true);
+						saveYamls();
+						if (config.getBoolean("AutoConfirm")) {
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been disabled.", getDescription().getName()));
+						} else {
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been enabled.", getDescription().getName()));
+						}
+					} else if (args[2].equalsIgnoreCase("false")
+							| args[2].equalsIgnoreCase("disable")) {
+						users.set(((Player) sender).getDisplayName()
+								+ ".Confirm", null);
+						saveYamls();
+						if (config.getBoolean("AutoConfirm")) {
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been enabled.", getDescription().getName()));
+						} else {
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Autoconfirm has been disabled.", getDescription().getName()));
+						}
+					}
+				}
 			}
 			return true;
 		}
