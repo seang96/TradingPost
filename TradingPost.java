@@ -23,7 +23,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import net.milkbowl.vault.permission.Permission;
@@ -34,6 +33,7 @@ public final class TradingPost extends JavaPlugin {
 	private static final Logger log = Logger.getLogger("Minecraft");
 	public static Economy econ = null;
 	public static Permission perms = null;
+	private Player player;
 	File configFile;
 	File dataFile;
 	File usersFile;
@@ -401,6 +401,21 @@ public final class TradingPost extends JavaPlugin {
 			int j = 0;
 			int i = 0;
 			int lowestPrice;
+			if(confirm) {
+				ItemStack is = new ItemStack(mat, totalamount);
+				HashMap<Integer, ItemStack> leftOver = new HashMap<Integer, ItemStack>();
+				leftOver.putAll((p.getInventory().addItem(is)));
+				if (!leftOver.isEmpty()) {
+					totalamount -= leftOver.get(0).getAmount();
+					ItemStack remove = new ItemStack(mat, totalamount);
+					p.getInventory().remove(remove);
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Your inventory is full. Rest of the items have been dropped.", getDescription().getName()));
+					return false;
+				}
+				else {
+						p.getInventory().remove(is);
+					}
+			}
 			while (amount > 0) {
 				if (config.getBoolean("Debug")) {
 					log.info(String.format(" New Loop", getDescription()
@@ -436,14 +451,7 @@ public final class TradingPost extends JavaPlugin {
 				currentamount += buyamount;
 				amount -= buyamount;
 				if (confirm) {
-					ItemStack is = new ItemStack(mat, totalamount);
-					HashMap<Integer, ItemStack> leftOver = new HashMap<Integer, ItemStack>();
-					leftOver.putAll((p.getInventory().addItem(is)));
-					if (!leftOver.isEmpty()) {
-						totalamount -= leftOver.get(0).getAmount();
-						ItemStack remove = new ItemStack(mat, totalamount);
-						p.getInventory().remove(remove);
-						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Your inventory is full. Rest of the items have been dropped.", getDescription().getName()));
+					if (econ.getBalance(player.getName()) < totalprice) {
 						return false;
 					}
 					EconomyResponse r1 = econ.depositPlayer(
@@ -472,6 +480,8 @@ public final class TradingPost extends JavaPlugin {
 				EconomyResponse r = econ
 						.withdrawPlayer(p.getName(), totalprice);
 				if (r.transactionSuccess()) {
+					ItemStack is = new ItemStack(mat, totalamount);
+					p.getInventory().addItem(is);
 					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have bought " + currentamount + " of " + mat + " for " + totalprice + ".", getDescription() .getName()));
 				}
 			} else {
