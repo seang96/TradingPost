@@ -157,12 +157,7 @@ public final class TradingPost extends JavaPlugin {
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
 				return false;
 			}
-			if (args.length > 5) {
-				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
-				return false;
-			}
-			if (args.length < 4) {
+			if (args.length > 5 || args.length < 4) {
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop sell <Item|ID> <Amount> <Price> [confirm]", getDescription().getName()));
 				return false;
@@ -241,12 +236,7 @@ public final class TradingPost extends JavaPlugin {
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
 				return false;
 			}
-			if (args.length > 3) {
-				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
-				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
-				return false;
-			}
-			if (args.length < 2) {
+			if (args.length > 3 || args.length < 2) {
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop list <amount|common|expensive|recent> [Item|ID]", getDescription().getName()));
 				return false;
@@ -339,12 +329,7 @@ public final class TradingPost extends JavaPlugin {
 				sender.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
 			}
-			if (args.length > 4) {
-				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
-				return false;
-			}
-			if (args.length < 3) {
+			if (args.length > 4 || args.length < 3) {
 				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Please type /shop buy <Item|ID> <Amount> [confirm]", getDescription().getName()));
 				return false;
@@ -354,9 +339,16 @@ public final class TradingPost extends JavaPlugin {
 			} else {
 				confirm = false;
 			}
-			if (users.getBoolean(((Player) sender).getDisplayName()
-					+ ".Confirm")) {
-				confirm = true;
+			if (config.getBoolean("AutoConfirm")) {
+				if (!users.getBoolean(((Player) sender).getDisplayName()
+						+ ".Confirm")) {
+					confirm = true;
+				}
+			} else {
+				if (users.getBoolean(((Player) sender).getDisplayName()
+						+ ".Confirm")) {
+					confirm = true;
+				}
 			}
 			Material mat = Material.matchMaterial(args[1]);
 			int id = mat.getId();
@@ -447,12 +439,7 @@ public final class TradingPost extends JavaPlugin {
 			if (args.length == 1) {
 				list = true;
 			}
-			if (args.length > 3) {
-				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format("Please type /shop transaction[s] <list|cancel> [ID]", getDescription().getName()));
-				return false;
-			}
-			if (args.length < 1) {
+			if (args.length > 3 || args.length < 1) {
 				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 				p.sendMessage(String.format("Please type /shop transaction[s] <list|cancel> [ID]", getDescription().getName()));
 				return false;
@@ -514,12 +501,7 @@ public final class TradingPost extends JavaPlugin {
 			}
 		} else if (args[0].equalsIgnoreCase("setting")
 				|| args[0].equalsIgnoreCase("settings")) {
-			if (args.length > 3) {
-				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
-				p.sendMessage(String.format("Please type /shop setting[s] <autoconfirm> [true|false]", getDescription().getName()));
-				return false;
-			}
-			if (args.length < 1) {
+			if (args.length > 3 || args.length < 1) {
 				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 				p.sendMessage(String.format("Please type /shop setting[s] <autoconfirm> [true|false]", getDescription().getName()));
 				return false;
