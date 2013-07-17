@@ -33,7 +33,6 @@ public final class TradingPost extends JavaPlugin {
 	private static final Logger log = Logger.getLogger("Minecraft");
 	public static Economy econ = null;
 	public static Permission perms = null;
-	private Player player;
 	File configFile;
 	File dataFile;
 	File usersFile;
@@ -153,7 +152,7 @@ public final class TradingPost extends JavaPlugin {
 			Player p = event.getPlayer();
 			for (int i = 1; i <= data.getInt("Total"); i++) {
 				if (data.getString("Users." + p + ".Alert." + i) != null) {
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Item ID " + i + " has been sold. You have gained " + data.getInt("Transactions." + i + ".Price") + ".", getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Transaction ID " + i + " has been sold. You have gained " + data.getInt("Users." + p + ".Alert." + i + ".Price") + ".", getDescription().getName()));
 					data.set("Users." + p + ".Alert." + i, null);
 				}
 			}
@@ -201,7 +200,7 @@ public final class TradingPost extends JavaPlugin {
 					confirm = true;
 				}
 			}
-			long IDcount = data.getInt("Total");
+//			long IDcount = data.getInt("Total");
 			int amount = Integer.parseInt(args[2]);
 			int price = Integer.parseInt(args[3]);
 			int totalprice = price * amount;
@@ -223,10 +222,14 @@ public final class TradingPost extends JavaPlugin {
 							EconomyResponse r = econ.withdrawPlayer(p.getName(),
 									tax);
 							if (r.transactionSuccess()) {
-								IDcount++;
-								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have added " + args[2] + " " + args[1] + " for " + args[3] + " to the " + "market. You have paid " + String.valueOf(tax) + " for taxes.", getDescription() .getName()));
-								for(int i = 1; i <= data.getInt("Total"); i++) {
-									if (data.getString("Transactions." + i + ".Status").equals("Sold") || data.getString(i + ".Status").equals("Cancelled")) {
+//								IDcount++;
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have added " + ChatColor.DARK_AQUA + args[2] + " " + args[1] + ChatColor.GOLD +" for " + ChatColor.DARK_AQUA + args[3] + ChatColor.GOLD + " to the market. You have paid " + ChatColor.DARK_AQUA + String.valueOf(tax) + ChatColor.GOLD + " for taxes.", getDescription() .getName()));
+								for(int i = 1; data.getInt("Total") == 0 || i <= (data.getInt("Total") + 1); i++) {
+									if (config.getBoolean("Debug")) {
+										log.info(String.format(" t = " + data.getInt("Total") + " i = " + i, getDescription()
+												.getName()));
+									}
+									if (data.getString("Transactions." + i) == null) {
 										loadYamls();
 										data.set("Transactions." + i + ".Player",
 										((Player) sender).getDisplayName());
@@ -236,20 +239,20 @@ public final class TradingPost extends JavaPlugin {
 										data.set("Transactions." + i + ".Price", price);
 										data.set("Transactions." + i + ".Status", "Selling");
 										data.set("Transactions." + i + ".Check", "T");
+										data.set("Total", i);
 										saveYamls();
 										return false;
 									}
-									else if (i == data.getInt("Total")) {
+									if (data.getString("Transactions." + i + ".Status").equals("Sold") || data.getString("Transactions." + i + ".Status").equals("Cancelled")) {
 										loadYamls();
-										data.set("Total", IDcount);
-										data.set("Transactions." + IDcount + ".Player",
+										data.set("Transactions." + i + ".Player",
 										((Player) sender).getDisplayName());
-										data.set("Transactions." + IDcount + ".Item", id);
-										data.set("Transactions." + IDcount + ".TotalAmount", amount);
-										data.set("Transactions." + IDcount + ".Amount", amount);
-										data.set("Transactions." + IDcount + ".Price", price);
-										data.set("Transactions." + IDcount + ".Status", "Selling");
-										data.set("Transactions." + IDcount + ".Check", "T");
+										data.set("Transactions." + i + ".Item", id);
+										data.set("Transactions." + i + ".TotalAmount", amount);
+										data.set("Transactions." + i + ".Amount", amount);
+										data.set("Transactions." + i + ".Price", price);
+										data.set("Transactions." + i + ".Status", "Selling");
+										data.set("Transactions." + i + ".Check", "T");
 										saveYamls();
 										return false;
 									}
@@ -264,10 +267,10 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 				else {
-				if (config.getBoolean("Debug")) {
-					log.info(String.format(" t = " + t1, getDescription()
-							.getName()));
-				}
+					if (config.getBoolean("Debug")) {
+						log.info(String.format(" t = " + t1, getDescription()
+								.getName()));
+					}
 				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You will sell " + args[2] + " " + args[1] + ". The total price will be " + String.valueOf(totalprice) + ". With the cost of " + String.valueOf(tax) + " for taxes.", getDescription().getName()));
 				}
 			} else {
@@ -401,6 +404,8 @@ public final class TradingPost extends JavaPlugin {
 			int j = 0;
 			int i = 0;
 			int lowestPrice;
+			int buy = 0;
+			int buysuccess = 0;
 			if(confirm) {
 				ItemStack is = new ItemStack(mat, totalamount);
 				HashMap<Integer, ItemStack> leftOver = new HashMap<Integer, ItemStack>();
@@ -408,8 +413,8 @@ public final class TradingPost extends JavaPlugin {
 				if (!leftOver.isEmpty()) {
 					totalamount -= leftOver.get(0).getAmount();
 					ItemStack remove = new ItemStack(mat, totalamount);
-					p.getInventory().remove(remove);
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Your inventory is full. Rest of the items have been dropped.", getDescription().getName()));
+					p.getInventory().removeItem(remove);
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Your inventory is full.", getDescription().getName()));
 					return false;
 				}
 				else {
@@ -425,38 +430,38 @@ public final class TradingPost extends JavaPlugin {
 				for (i = 1; i <= data.getInt("Total"); i++) {
 					if ((data.getInt("Transactions." + i + ".Item") == id)
 							&& (data.getString("Transactions." + i + ".Status").equals("Selling"))
-							&& (data.getString("Transactions." + i + ".Check").equals("T"))) {
+							&& (data.getString("Transactions." + i + ".Check").equals("T") 
+							/*&& (!data.getString("Transactions." + i + ".Player").equals(((Player) sender).getDisplayName()))*/)) {
 						if (lowestPrice < 0
 								|| data.getInt("Transactions." + i + ".Price") < lowestPrice) {
 							lowestPrice = data.getInt("Transactions." + i + ".Price");
 							j = i;
 						}
+						if (config.getBoolean("Debug")) {
+							log.info(String.format(" p= " + p + " Name: " + data.getString("Transactions." + i + ".Player") + " i = " + i, getDescription().getName()));
+						}
 					}
 				}
 				if (lowestPrice < 0) {
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There is not enough " + mat + " on sale.", getDescription().getName()));
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "There is either not enough " + mat + " on sale or you are selling all of the " + mat + ".", getDescription().getName()));
 					return false;
 				}
-				if (config.getBoolean("Debug")) {
-					log.info(String.format(" J= "
-							+ String.valueOf(j)
-							+ " Name: "
-							+ data.getString("Transactions." + j + ".Player", getDescription()
-									.getName())));
-				}
 				int buyamount = (data.getInt("Transactions." + j + ".Amount") < amount) ? data
-						.getInt(j + ".Amount") : amount;
+						.getInt("Transactions." + j + ".Amount") : amount;
 				int price = data.getInt("Transactions." + j + ".Price") * buyamount;
 				totalprice += price;
 				currentamount += buyamount;
 				amount -= buyamount;
+				if (config.getBoolean("Debug")) {
+					log.info(String.format(" J= " + String.valueOf(j) + " Name: " + data.getString("Transactions." + j + ".Player") + " b = " + buy + " b2 = " + buysuccess + " amount = " + amount + " ba = " + buyamount, getDescription().getName()));
+				}
 				if (confirm) {
-					if (econ.getBalance(player.getName()) < totalprice) {
-						return false;
-					}
+					buy++;
+					EconomyResponse r = econ.withdrawPlayer(p.getName(), price);
 					EconomyResponse r1 = econ.depositPlayer(
 							data.getString("Transactions." + j + ".Player"), price);
-					if (r1.transactionSuccess()) {
+					if (r.transactionSuccess() && r1.transactionSuccess()) {
+						buysuccess++;
 						data.set("Transactions." + j + ".Amount",
 						(data.getInt("Transactions." + j + ".Amount") - buyamount));
 						if (data.getInt("Transactions." + j + ".Amount") == 0) {
@@ -464,9 +469,10 @@ public final class TradingPost extends JavaPlugin {
 							Player player = Bukkit.getPlayerExact(data.getString("Transactions." + j + ".Player"));
 							if (player == null) {
 								data.set("Users." + data.getString("Transactions." + j + ".Player") + ".Alert." + j, j);
+								data.set("Users." + data.getString("Transactions." + j + ".Player") + ".Alert." + j + ".Price", data.getInt("Transactions." + j + ".Price"));
 							}
 							else {
-								player.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + j + " has been sold and you have received " + data.getInt("Transactions." + j + ".TotalAmount") * data.getInt("Transactions." + j + ".Price") + ".", getDescription()));
+								player.sendMessage("[" + ChatColor.LIGHT_PURPLE + "TradingPost" + ChatColor.RESET + "] " + ChatColor.GOLD + "Transaction ID " + j + " has been sold and you have received " + data.getInt("Transactions." + j + ".TotalAmount") * data.getInt("Transactions." + j + ".Price") + ".");
 							}
 						}
 						saveYamls();
@@ -477,9 +483,7 @@ public final class TradingPost extends JavaPlugin {
 				}
 			}
 			if (confirm) {
-				EconomyResponse r = econ
-						.withdrawPlayer(p.getName(), totalprice);
-				if (r.transactionSuccess()) {
+				if (buy == buysuccess) {
 					ItemStack is = new ItemStack(mat, totalamount);
 					p.getInventory().addItem(is);
 					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have bought " + currentamount + " of " + mat + " for " + totalprice + ".", getDescription() .getName()));
@@ -550,15 +554,16 @@ public final class TradingPost extends JavaPlugin {
 								getDescription().getName()));
 					}
 					if (data.getString("Transactions." + i + ".Player").equals(
-							((Player) sender).getDisplayName()) && data.getString("Transactions." + i + ".Status").equals("Selling")) {
+							((Player) sender).getDisplayName())) {
 						if (printed_items == 0) {
-							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "ID " + ChatColor.RED + "Item " + ChatColor.GREEN + "Amount " + ChatColor.DARK_PURPLE + "Price/Unit " + ChatColor.DARK_AQUA + "Total Price", getDescription().getName()));
+							p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "ID " + ChatColor.AQUA + "Item " + ChatColor.GREEN + "Amount " + ChatColor.DARK_PURPLE + "Price/Unit " + ChatColor.DARK_AQUA + "Total Price " + ChatColor.RED + "Status", getDescription().getName()));
 						}
-						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + i + " " + ChatColor.RED + Material.getMaterial(data.getInt("Transactions." + i + ".Item")) + " " + ChatColor.GREEN + data.getInt("Transactions." + i + ".TotalAmount") + " " + ChatColor.DARK_PURPLE + data.getInt("Transactions." + i + ".Price") + " " + ChatColor.DARK_AQUA + data.getInt("Transactions." + i + ".Price") * data.getInt("Transactions." + i + ".TotalAmount"), getDescription().getName()));
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + i + " " + ChatColor.AQUA + Material.getMaterial(data.getInt("Transactions." + i + ".Item")) + " " + ChatColor.GREEN + data.getInt("Transactions." + i + ".TotalAmount") + " " + ChatColor.DARK_PURPLE + data.getInt("Transactions." + i + ".Price") + " " + ChatColor.DARK_AQUA + data.getInt("Transactions." + i + ".Price") * data.getInt("Transactions." + i + ".TotalAmount") + " " + ChatColor.RED +data.getString("Transactions." + i + ".Status"), getDescription().getName()));
 						printed_items++;
 					}
 					else if (printed_items == 0 && i == 0){
 						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You do not have any transactions on sale.", getDescription().getName()));
+						return false;
 					}
 					i--;
 				}
@@ -624,46 +629,50 @@ public final class TradingPost extends JavaPlugin {
 					}
 				}
 			}
+		}
 			else if (args[0].equalsIgnoreCase("item")) {
-				if (args.length > 2 || args.length < 1) {
+				boolean held = false;
+				if (args.length == 1) {
+					held = true;
+				}
+				if (args.length > 3 || args.length < 1) {
 					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Syntax error.", getDescription().getName()));
 					p.sendMessage(String.format("Please type /shop item [id|name> [ItemID|ItemName]", getDescription().getName()));
 					return false;
 				}
-				Material mat = Material.matchMaterial(args[2]);
-				int id = mat.getId();
-				if (args[1].equalsIgnoreCase("id")) {
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "The id of " + Material.getMaterial(args[2]) + " is" + id + ".", getDescription().getName()));
+				if (args.length > 2 && args[1].equalsIgnoreCase("id")) {
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "The id of " + Material.matchMaterial(args[2]) + " is " + Material.matchMaterial(args[2]).getId() + ".", getDescription().getName()));
 					return false;
 				}
-				else if (args[1].equalsIgnoreCase("name")) {
-					mat = Material.matchMaterial(args[2]);
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "The name of " + id + " is" + Material.getMaterial(args[2]) + ".", getDescription().getName()));
+				else if (args.length > 2 && args[1].equalsIgnoreCase("name")) {
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "The name of " + Material.matchMaterial(args[2]) + " is " + Material.matchMaterial(args[2]).getId() + ".", getDescription().getName()));
 					return false;
 				}
-				ItemStack i = p.getItemInHand();
-				mat = Material.getMaterial(i.getTypeId());
-				id = mat.getId();
-				p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "The item you are holdings ID is " + id + " and its name is " + Material.getMaterial(i.getTypeId()) + ".", getDescription().getName()));
-				if (users.getBoolean(((Player) sender).getDisplayName() + ".ItemNotice")) {
-					return false;
-				}
-				else {
-					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "One-time Notice: You can also use /shop item <id|name> <ItemID|ItemName> to get a specific items id or name..", getDescription().getName()));
-					users.set(((Player) sender).getDisplayName() + ".ItemNotice", true);
+				else if (args.length == 1 || held) {
+					ItemStack i = p.getItemInHand();
+					Material mat = Material.getMaterial(i.getTypeId());
+					int id = mat.getId();
+					p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "Held ID is " + id + " with the name " + Material.getMaterial(i.getTypeId()) + ".", getDescription().getName()));
+					if (users.getBoolean(((Player) sender).getDisplayName() + ".ItemNotice")) {
+						return false;
+					}
+					else {
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "One-time Notice: You can also use /shop item <id|name> <ItemID|ItemName> to get a specific items id or name..", getDescription().getName()));
+						users.set(((Player) sender).getDisplayName() + ".ItemNotice", true);
+					}
 				}
 			}
 			else if (args[0].equalsIgnoreCase("About")) {
-				p.sendMessage(ChatColor.GREEN + "---------=============" + ChatColor.GOLD + "About TradingPost" + ChatColor.GREEN + "=============--------");
+				p.sendMessage(ChatColor.GREEN + "------============" + ChatColor.GOLD + " About TradingPost " + ChatColor.GREEN + "============------");
 				p.sendMessage(ChatColor.GOLD + "TradingPost is a plugin designed like Trading Posts in games such as GuildWars 2 or other mmo's alike.");
-				p.sendMessage(ChatColor.GOLD + "The main purpose is to" + ChatColor.RED + " sell items to other players" + ChatColor.GOLD + ". The buyers will be buying at the" + ChatColor.RED + "current cheapest price per unit" + ChatColor.GOLD + ".");
-				p.sendMessage(ChatColor.GOLD + "The result is that" + ChatColor.LIGHT_PURPLE + "everyone" + ChatColor.GOLD + " is competing against others prices and causes a" + ChatColor.RED + "dynamic player-based economy" + ChatColor.GOLD + ".");
-				p.sendMessage(ChatColor.RED + "I give out a special thanks to those who helped me with errors, design, and the coding (especially buckley310) (this is my first project in JAVA).");
+				p.sendMessage(ChatColor.GOLD + "The main purpose is to" + ChatColor.RED + " sell items to other players" + ChatColor.GOLD + ". The buyers will be buying at the " + ChatColor.RED + "current cheapest price per unit" + ChatColor.GOLD + ".");
+				p.sendMessage(ChatColor.GOLD + "The result is that " + ChatColor.LIGHT_PURPLE + "everyone" + ChatColor.GOLD + " is competing against others prices and causes a " + ChatColor.RED + "dynamic player-based economy" + ChatColor.GOLD + ".");
+				p.sendMessage(ChatColor.YELLOW + "I give out a special thanks to those who helped me with errors, design, and the coding (especially buckley310).");
 				p.sendMessage(ChatColor.GOLD + "TradingPost is designed by " + ChatColor.RED + "seang96" + ChatColor.GOLD + ". Donate to " + ChatColor.AQUA + "ryuk67@gmail.com - Paypal " + ChatColor.GOLD + "to support TradingPost and my server.");
 				p.sendMessage(ChatColor.GOLD + "If you find any bugs or feature requests please report it to " + ChatColor.RED + "ryuk67@gmail.com");
 			}
 			else if (args[0].equalsIgnoreCase("FAQ")) {
-				p.sendMessage(ChatColor.GREEN + "---------=============" + ChatColor.GOLD + "About TradingPost" + ChatColor.GREEN + "=============--------");
+				p.sendMessage(ChatColor.GREEN + "-------===========" + ChatColor.GOLD + " TradingPost  FAQ " + ChatColor.GREEN + "============-------");
 				p.sendMessage(ChatColor.LIGHT_PURPLE + "Q: " + ChatColor.GOLD + "How do I sell items?");
 				p.sendMessage(ChatColor.AQUA + "A: " + ChatColor.GOLD + "Typing /shop sell shows the proper syntax. An example command is: /shop sell stone 4 10 confirm.");
 				p.sendMessage(ChatColor.LIGHT_PURPLE + "Q: " + ChatColor.GOLD + "How do I buy items?");
@@ -672,7 +681,6 @@ public final class TradingPost extends JavaPlugin {
 				p.sendMessage(ChatColor.AQUA + "A: " + ChatColor.GOLD + "Type /shop transactions will display 10 recent transactions on sale. Locate the ID for the one you wish to cancel then try typing /shop cancel <ID> to cancel it.");
 				p.sendMessage(ChatColor.LIGHT_PURPLE + "Q: " + ChatColor.GOLD + "Why does my transactions only show what I am selling?");
 				p.sendMessage(ChatColor.AQUA + "A: " + ChatColor.GOLD + "There is a limitation to numbers in java. TradingPost reuses the ID of canceled or bought items, therefore it is useless to show them.");
-			}
 			return true;
 		}
 		return false;
