@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -223,7 +225,7 @@ public final class TradingPost extends JavaPlugin {
 									tax);
 							if (r.transactionSuccess()) {
 //								IDcount++;
-								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have added " + ChatColor.DARK_AQUA + args[2] + " " + args[1] + ChatColor.GOLD +" for " + ChatColor.DARK_AQUA + args[3] + ChatColor.GOLD + " to the market. You have paid " + ChatColor.DARK_AQUA + String.valueOf(tax) + ChatColor.GOLD + " for taxes.", getDescription() .getName()));
+								p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "You have added" + args[2] + " " + args[1] + ChatColor.GOLD +" for " + ChatColor.DARK_AQUA + args[3] + ChatColor.GOLD + " to the market. You have paid " + ChatColor.DARK_AQUA + String.valueOf(tax) + ChatColor.GOLD + " for taxes.", getDescription() .getName()));
 								for(int i = 1; data.getInt("Total") == 0 || i <= (data.getInt("Total") + 1); i++) {
 									if (config.getBoolean("Debug")) {
 										log.info(String.format(" t = " + data.getInt("Total") + " i = " + i, getDescription()
@@ -313,45 +315,112 @@ public final class TradingPost extends JavaPlugin {
 				}
 			}
 			if (args[1].equalsIgnoreCase("common")) {
+				List<Integer> ids = new ArrayList<Integer>();
 				// Most amount of items in ID, displays the top 10
 				int i = data.getInt("Total");
 				int printed_items = 0;
 				int amount = -1;
-				int id = -1;
+				int highestamount = -1;
+				int k = 0;
 				while (i > 0 && printed_items < 10) {
-					if (data.getString("Transactions." + i + ".Status").equals("Selling")
-							&& (data.getInt("Transactions." + i + ".Amount") < amount || amount < 0)) {
-						id = data.getInt("Transactions." + i + ".Item");
-						for (int j = 1; j <= data.getInt("Total"); j++) {
-							if (id == data.getInt("Transactions." + i + ".Item")) {
-								amount += data.getInt("Transactions." + j + ".Amount");
-							}
-							else {
-								amount = data.getInt("Transactions." + i + ".Amount");
+					highestamount = -1;
+					amount = -1;
+					for (int j = 1; j <= data.getInt("Total"); j++) {
+						if (config.getBoolean("Debug")) {
+							log.info(String.format(" j = " + j,
+									getDescription().getName()));
+						}
+						if (!ids.contains(data.getInt("Transactions." + j + ".Item")) && data.getString("Transactions." + j + ".Status").equals("Selling")) {
+							if (highestamount < 0 || data.getInt("Transactions." + j + ".Amount") > highestamount) {
+								highestamount= data.getInt("Transactions." + j + ".Amount");
+								k = j;
+								if (config.getBoolean("Debug")) {
+									log.info(String.format("true h = " + highestamount + " k= " + k,
+											getDescription().getName()));
+								}
 							}
 						}
-						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) total amount of " + data.getInt("Transactions." + i + ".Amount") + " " + Material.getMaterial(data.getInt("Transactions." + i + ".Item")) + " has been added to the list.", getDescription().getName()));
-						printed_items++;
 					}
-					i--;
+					if (!ids.contains(data.getInt("Transactions." + k + ".Item")) && data.getString("Transactions." + k + ".Status").equals("Selling")) {
+						for (int l = 1; l <= data.getInt("Total"); l++) {
+							if (config.getBoolean("Debug")) {
+								log.info(String.format(" k = " + k + " l = " + l,
+									getDescription().getName()));
+							}
+							if (data.getInt("Transactions." + k + ".Item") == data.getInt("Transactions." + l + ".Item")) {
+								if (amount == -1) {
+									amount = data.getInt("Transactions."  + l + ".Amount");
+								}
+								else {
+									amount += data.getInt("Transactions." + l + ".Amount");
+								}
+								if (config.getBoolean("Debug")) {
+									log.info(String.format(" a = " + amount + " l = " + l,
+										getDescription().getName()));
+								}
+							}
+						}
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) total amount of " + amount + " " + Material.getMaterial(data.getInt("Transactions." + k + ".Item")) + " has been added to the list.", getDescription().getName()));
+						printed_items++;
+						ids.add(data.getInt("Transactions." + k + ".Item"));
+						i--;
+					}
+					else {
+						printed_items = 10;
+					}
 				}
 			}
 			if (args[1].equalsIgnoreCase("expensive")) {
 				// Most expensive items on the market by ID, displays top 10,
 				// (also checks the cheapest of that item ID to be the most
 				// expensive)
+				List<Integer> ids = new ArrayList<Integer>();
 				int i = data.getInt("Total");
 				int printed_items = 0;
 				int price = -1;
+				int highestprice = -1;
+				int k = 0;
+				boolean loop = true;
 				while (i > 0 && printed_items < 10) {
-					if (data.getString("Transactions." + i + ".Status").equals("Selling")
-							&& (data.getInt("Transactions." + i + ".Price") < price || price < 0)) {
-						price = data.getInt("Transactions." + i + ".Price");
-						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) amount of " + data.getInt("Transactions." + i + ".Amount") + " " + Material.getMaterial(data.getInt("Transactions." + i + ".Item")) + " has been added for " + data.getInt("Transactions." + i + ".Price") + ".",
-								getDescription().getName()));
-						printed_items++;
+					for (int j = 1; j <= data.getInt("Total"); j++) {
+						if (config.getBoolean("Debug")) {
+							log.info(String.format(" j = " + j,
+									getDescription().getName()));
+						}
+						if (!ids.contains(data.getInt("Transactions." + j + ".Item")) && data.getString("Transactions." + j + ".Status").equals("Selling")) {
+							if ((highestprice < 0 || data.getInt("Transactions." + j + ".Price") < highestprice)  && (price < 0 || price > data.getInt("Transactions." + j + ".Price"))){
+								for (k = 1; k <= data.getInt("Total"); k++) {
+									if (highestprice < 0 || data.getInt("Transactions." + k + ".Price") > highestprice && loop) {
+										highestprice = data.getInt("Transactions." + k + ".Price");
+										j = k;
+									}
+								}
+								highestprice = data.getInt("Transactions." + j + ".Price");
+								price = data.getInt("Transactions."  + j + ".Price");
+								if (loop) {
+									j = 1;
+								}
+								k = j;
+								loop = false;
+								if (config.getBoolean("Debug")) {
+									log.info(String.format("true h = " + highestprice + " k= " + k,
+											getDescription().getName()));
+								}
+							}
+						}
 					}
-					i--;
+					if (!ids.contains(data.getInt("Transactions." + k + ".Item")) && data.getString("Transactions." + k + ".Status").equals("Selling")) {
+						p.sendMessage(String.format("[" + ChatColor.LIGHT_PURPLE + "%s" + ChatColor.RESET + "] " + ChatColor.GOLD + "A(n) cost of " + price + " per unit is " + Material.getMaterial(data.getInt("Transactions." + k + ".Item")) + " has been added to the list.", getDescription().getName()));
+						printed_items++;
+						ids.add(data.getInt("Transactions." + k + ".Item"));
+						highestprice = -1;
+						price = -1;
+						loop = true;
+						i--;
+					}
+					else {
+						printed_items = 10;
+					}
 				}
 			}
 			if (args[1].equalsIgnoreCase("recent")) {
